@@ -1,55 +1,63 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"io"
+
+	//"io"
 	"log"
 	"net/http"
-	"os"
 
-	"github.com/go-sql-driver/mysql"
+	//"os"
+
+	//"github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
 
 func main() {
 	// Load environment variables
 	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Could not load environment vars: " + err.Error())
-	}
+	ctx := context.Background()
+	fmt.Println(getVideoIds(ctx, "UCGaVdbSav8xWuFWTadK6loA"))
 
-	cfg := mysql.Config{
-		User:                 os.Getenv("USERNAME"),
-		Passwd:               os.Getenv("PASSWORD"),
-		Net:                  "tcp",
-		Addr:                 os.Getenv("HOST"),
-		DBName:               os.Getenv("DATABASE"),
-		AllowNativePasswords: true,
-	}
+	/*
+		if err != nil {
+			log.Fatal("Could not load environment vars: " + err.Error())
+		}
 
-	db, err := sql.Open("mysql", cfg.FormatDSN())
-	if err != nil {
-		log.Fatal(err)
-	}
+		cfg := mysql.Config{
+			User:                 os.Getenv("USERNAME"),
+			Passwd:               os.Getenv("PASSWORD"),
+			Net:                  "tcp",
+			Addr:                 os.Getenv("HOST"),
+			DBName:               os.Getenv("DATABASE"),
+			AllowNativePasswords: true,
+		}
 
-	pingErr := db.Ping()
-	if pingErr != nil {
-		log.Fatal(pingErr)
-	}
-	fmt.Println("DB connected")
+		db, err := sql.Open("mysql", cfg.FormatDSN())
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	// Test youtube API
-	ytApiKey := os.Getenv("YOUTUBE_API_KEY")
-	resp, err := http.Get("https://www.googleapis.com/youtube/v3/videos?id=7lCDEYXw3mM&key=" + ytApiKey + "&part=snippet,contentDetails,statistics,status")
-	if err != nil {
-		log.Fatal(err)
-	}
+		pingErr := db.Ping()
+		if pingErr != nil {
+			log.Fatal(pingErr)
+		}
+		fmt.Println("DB connected")
 
-	body, err := io.ReadAll(resp.Body)
-	fmt.Println(string(body))
+		// Test youtube API
+		ytApiKey := os.Getenv("YOUTUBE_API_KEY")
+		resp, err := http.Get("https://www.googleapis.com/youtube/v3/videos?id=7lCDEYXw3mM&key=" + ytApiKey + "&part=snippet,contentDetails,statistics,status")
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	http.Handle("/", http.HandlerFunc(testHandler(db)))
+		body, err := io.ReadAll(resp.Body)
+		fmt.Println(string(body))
+
+		http.Handle("/", http.HandlerFunc(testHandler(db)))
+	*/
 
 	fmt.Println("Listening on http://localhost:3001")
 	err = http.ListenAndServe(":3001", nil)
