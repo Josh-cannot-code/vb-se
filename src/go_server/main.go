@@ -19,7 +19,8 @@ func main() {
 	// Load environment variables
 	err := godotenv.Load(".env")
 	//ctx := context.Background()
-	fmt.Println(getVideo("this"))
+	//fmt.Println(getVideo("this"))
+	fmt.Println(getVideoTranscripts([]string{"whaa"})["IELMSD2kdmk"])
 	//getVideoIds(ctx, "UCGaVdbSav8xWuFWTadK6loA")
 
 	/*
@@ -46,16 +47,6 @@ func main() {
 			log.Fatal(pingErr)
 		}
 		fmt.Println("DB connected")
-
-		// Test youtube API
-		ytApiKey := os.Getenv("YOUTUBE_API_KEY")
-		resp, err := http.Get("https://www.googleapis.com/youtube/v3/videos?id=7lCDEYXw3mM&key=" + ytApiKey + "&part=snippet,contentDetails,statistics,status")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		fmt.Println(string(body))
 
 		http.Handle("/", http.HandlerFunc(testHandler(db)))
 	*/

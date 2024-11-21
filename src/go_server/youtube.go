@@ -24,6 +24,7 @@ type video struct {
 	UploadDate  string `json:"upload_date"` // TODO: proper datetime
 	URL         string `json:"url"`
 	ChannelName string `json:"channel_name"`
+	Transcript  string
 }
 
 // TODO: handle errors
@@ -94,4 +95,23 @@ func getVideo(videoId string) video {
 	}
 
 	return vid
+}
+
+func getVideoTranscripts(videoIds []string) map[string]string {
+	path, err := exec.LookPath("python3")
+	if err != nil {
+		log.Fatal(err)
+	}
+	out, err := exec.Command(path, "get_transcripts.py").Output() // TODO: + videoIds)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	transcriptMap := make(map[string]string)
+	err = json.Unmarshal(out, &transcriptMap)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return transcriptMap
 }
