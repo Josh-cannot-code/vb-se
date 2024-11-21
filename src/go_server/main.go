@@ -19,8 +19,9 @@ func main() {
 	// Load environment variables
 	err := godotenv.Load(".env")
 	//ctx := context.Background()
-	//fmt.Println(getVideo("this"))
-	fmt.Println(getVideoTranscripts([]string{"whaa"})["IELMSD2kdmk"])
+	//fmt.Println(getVideo("IELMSD2kdmk"))
+	//fmt.Println(getVideoTranscripts([]string{"IELMSD2kdmk", "dCxSsr5xuL8"}))
+	fmt.Println(getVideoTranscripts([]string{"IELMSD2kdmk"}))
 	//getVideoIds(ctx, "UCGaVdbSav8xWuFWTadK6loA")
 
 	/*

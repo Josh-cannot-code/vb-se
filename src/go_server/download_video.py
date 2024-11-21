@@ -4,16 +4,19 @@ import sys
 import os
 import json
 
+# TODO: Failure cases
 if __name__ == "__main__":
-    # TODO: argparse
-    videoId = "IELMSD2kdmk"
+    parser = argparse.ArgumentParser(prog="dowload_video")
+    parser.add_argument("videoId")
+    args = parser.parse_args()
+
     options = {
             "quiet": True,
     }
 
     sys.stderr = open(os.devnull, "w")
     with yt_dlp.YoutubeDL(options) as ydl:
-        result = ydl.extract_info('https://www.youtube.com/watch?v=' + videoId, download=False)
+        result = ydl.extract_info('https://www.youtube.com/watch?v=' + args.videoId, download=False)
     sys.stderr = sys.__stdout__
 
     video = {

@@ -2,21 +2,24 @@ from youtube_transcript_api import YouTubeTranscriptApi
 import argparse
 import json
 
+# TODO: failure cases
 if __name__ == "__main__":
-    videoIds = ["IELMSD2kdmk"]
+    parser = argparse.ArgumentParser(prog="dowload_video")
+    parser.add_argument("videoIds")
+    args = parser.parse_args()
+    videoIds = args.videoIds.split(",")
+
     transcripts, unretrievable_transcripts = YouTubeTranscriptApi.get_transcripts(videoIds, continue_after_error=True)
 
     transcriptMap = {} 
     for v_id in videoIds:
         if v_id in unretrievable_transcripts:
-            print(f"Unable to retrieve transcript for video: {v_id}")
+            #print(f"Unable to retrieve transcript for video: {v_id}")
             transcriptMap[v_id] = "NO_TRANSCRIPT"
-            #data = { "transcript" : "NO TRANSCRIPT", "video_id" : v_id }
         else:
             s = ""
             for t in transcripts[v_id]:
                 s += " " + t["text"]
             transcriptMap[v_id] = s
-            #data = { "transcript" : s, "video_id" : v_id }
 
-        print(json.dumps(transcriptMap))
+    print(json.dumps(transcriptMap))

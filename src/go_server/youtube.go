@@ -83,7 +83,8 @@ func getVideo(videoId string) video {
 	if err != nil {
 		log.Fatal(err)
 	}
-	out, err := exec.Command(path, "download_video.py").Output() // TODO: + videoId)
+
+	out, err := exec.Command(path, "download_video.py", videoId).Output()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -98,11 +99,20 @@ func getVideo(videoId string) video {
 }
 
 func getVideoTranscripts(videoIds []string) map[string]string {
+	if len(videoIds) == 0 {
+		return make(map[string]string)
+	}
 	path, err := exec.LookPath("python3")
 	if err != nil {
 		log.Fatal(err)
 	}
-	out, err := exec.Command(path, "get_transcripts.py").Output() // TODO: + videoIds)
+
+	vidsArg := videoIds[0]
+	for _, vId := range videoIds[1:] {
+		vidsArg += "," + vId
+	}
+
+	out, err := exec.Command(path, "get_transcripts.py", vidsArg).Output()
 	if err != nil {
 		log.Fatal(err)
 	}
