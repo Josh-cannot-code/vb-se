@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+	//"context"
 	"database/sql"
 	"fmt"
 
@@ -18,8 +18,9 @@ import (
 func main() {
 	// Load environment variables
 	err := godotenv.Load(".env")
-	ctx := context.Background()
-	fmt.Println(getVideoIds(ctx, "UCGaVdbSav8xWuFWTadK6loA"))
+	//ctx := context.Background()
+	fmt.Println(getVideo("this"))
+	//getVideoIds(ctx, "UCGaVdbSav8xWuFWTadK6loA")
 
 	/*
 		if err != nil {

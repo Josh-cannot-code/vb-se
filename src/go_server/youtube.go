@@ -2,14 +2,29 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+
+	//	"io"
 	"log"
+	"os/exec"
 
 	"os"
 
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )
+
+type video struct {
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Thumbnail   string `json:"thumbnail"`
+	ChannelID   string `json:"channel_id"`
+	Description string `json:"description"`
+	UploadDate  string `json:"upload_date"` // TODO: proper datetime
+	URL         string `json:"url"`
+	ChannelName string `json:"channel_name"`
+}
 
 // TODO: handle errors
 func getVideoIds(ctx context.Context, channelId string) []string {
@@ -49,7 +64,7 @@ func getVideoIds(ctx context.Context, channelId string) []string {
 
 		// Save video ids
 		for _, item := range playlistResp.Items {
-			videoIds = append(videoIds, item.Id)
+			videoIds = append(videoIds, item.ContentDetails.VideoId)
 		}
 
 		nextPageToken = playlistResp.NextPageToken
@@ -60,4 +75,23 @@ func getVideoIds(ctx context.Context, channelId string) []string {
 	}
 
 	return videoIds
+}
+
+func getVideo(videoId string) video {
+	path, err := exec.LookPath("python3")
+	if err != nil {
+		log.Fatal(err)
+	}
+	out, err := exec.Command(path, "download_video.py").Output() // TODO: + videoId)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var vid video
+	err = json.Unmarshal(out, &vid)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return vid
 }
