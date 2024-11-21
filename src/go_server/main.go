@@ -1,28 +1,24 @@
 package main
 
 import (
-	//"context"
+	"context"
 	"database/sql"
 	"fmt"
 
-	//"io"
 	"log"
 	"net/http"
 
-	//"os"
-
-	//"github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
 
 func main() {
 	// Load environment variables
 	err := godotenv.Load(".env")
-	//ctx := context.Background()
+	ctx := context.Background()
 	//fmt.Println(getVideo("IELMSD2kdmk"))
 	//fmt.Println(getVideoTranscripts([]string{"IELMSD2kdmk", "dCxSsr5xuL8"}))
-	fmt.Println(getVideoTranscripts([]string{"IELMSD2kdmk"}))
-	//getVideoIds(ctx, "UCGaVdbSav8xWuFWTadK6loA")
+	//fmt.Println(getVideoTranscripts([]string{"IELMSD2kdmk"}))
+	getVideoIds(ctx, "UCGaVdbSav8xWuFWTadK6loA")
 
 	/*
 		if err != nil {
