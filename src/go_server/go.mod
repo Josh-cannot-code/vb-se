@@ -16,6 +16,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.0 // indirect
+	github.com/mattn/go-sqlite3 v1.14.24 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 // indirect
 	go.opentelemetry.io/otel v1.29.0 // indirect
@@ -33,6 +34,8 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/google/go-cmp v0.6.0
 	github.com/joho/godotenv v1.5.1 // indirect
 	google.golang.org/api v0.207.0
+	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697
 )

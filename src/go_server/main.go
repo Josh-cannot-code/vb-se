@@ -4,26 +4,36 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"go_server/database"
+	"go_server/youtube"
 
 	"log"
 	"net/http"
 
 	"github.com/joho/godotenv"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	// Load environment variables
-	err := godotenv.Load(".env")
 	ctx := context.Background()
-	//fmt.Println(getVideo("IELMSD2kdmk"))
-	//fmt.Println(getVideoTranscripts([]string{"IELMSD2kdmk", "dCxSsr5xuL8"}))
-	//fmt.Println(getVideoTranscripts([]string{"IELMSD2kdmk"}))
-	getVideoIds(ctx, "UCGaVdbSav8xWuFWTadK6loA")
+
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Could not load environment vars: " + err.Error())
+	}
+	sqlDb, err := sql.Open("sqlite3", "../db/vb-se.db")
+	defer sqlDb.Close()
+
+	db := database.NewSqLiteConnection(sqlDb)
+	//	vid := youtube.GetVideo("REi089fakFI")
+	err = youtube.RefreshVideos(ctx, db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//	ctx := context.Background()
 
 	/*
-		if err != nil {
-			log.Fatal("Could not load environment vars: " + err.Error())
-		}
 
 		cfg := mysql.Config{
 			User:                 os.Getenv("USERNAME"),
