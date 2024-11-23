@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go_server/database"
 	"go_server/types"
+	"strings"
 
 	"log"
 	"os/exec"
@@ -69,6 +70,13 @@ func GetVideo(videoId string) (*types.Video, error) {
 	path, err := exec.LookPath("python3")
 	if err != nil {
 		return nil, err
+	}
+
+	// For tests, needs to change
+	dir, _ := os.Getwd()
+	splitDir := strings.Split(dir, "/")
+	if splitDir[len(splitDir)-1] == "youtube" {
+		os.Chdir("..")
 	}
 
 	// TODO: need better errors here so we know when to backoff video gets

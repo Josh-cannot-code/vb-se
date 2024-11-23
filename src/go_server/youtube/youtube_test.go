@@ -2,7 +2,6 @@ package youtube
 
 import (
 	"context"
-	"log"
 	"reflect"
 	"strings"
 	"testing"
@@ -31,7 +30,7 @@ func TestGetVideoIds(t *testing.T) {
 func TestGetVideo(t *testing.T) {
 	vid, err := GetVideo("REi089fakFI")
 	if err != nil {
-		log.Fatalf(err.Error())
+		t.Fatalf(err.Error())
 	}
 	expected := "Quick Ableton Beat"
 
