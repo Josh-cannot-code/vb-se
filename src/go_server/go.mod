@@ -36,6 +36,7 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/google/go-cmp v0.6.0
 	github.com/joho/godotenv v1.5.1 // indirect
+	github.com/veqryn/slog-context v0.7.0
 	google.golang.org/api v0.207.0
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697
 )

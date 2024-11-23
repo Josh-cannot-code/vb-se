@@ -3,16 +3,16 @@ package youtube
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"go_server/database"
 	"go_server/types"
-	"strings"
+	"net/http"
 
 	"log"
 	"os/exec"
 
 	"os"
 
+	slogctx "github.com/veqryn/slog-context"
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )
@@ -72,15 +72,8 @@ func GetVideo(videoId string) (*types.Video, error) {
 		return nil, err
 	}
 
-	// For tests, needs to change
-	dir, _ := os.Getwd()
-	splitDir := strings.Split(dir, "/")
-	if splitDir[len(splitDir)-1] == "youtube" {
-		os.Chdir("..")
-	}
-
 	// TODO: need better errors here so we know when to backoff video gets
-	out, err := exec.Command(path, "download_video.py", videoId).Output()
+	out, err := exec.Command(path, "python_scripts/get_video.py", videoId).Output()
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +123,7 @@ func GetVideoTranscripts(videoIds []string) map[string]string {
 		vidsArg += "," + vId
 	}
 
-	out, err := exec.Command(path, "get_transcripts.py", vidsArg).Output()
+	out, err := exec.Command(path, "python_scripts/get_transcripts.py", vidsArg).Output()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -144,44 +137,66 @@ func GetVideoTranscripts(videoIds []string) map[string]string {
 	return transcriptMap
 }
 
-func RefreshVideos(ctx context.Context, db database.Repository) error {
-	channelIds, err := db.GetChannelIds(ctx)
-	if err != nil {
-		return err
-	}
+func RefreshVideos(db database.Repository) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Get logger
+		ctx := slogctx.With(r.Context(), "function", "refreshVideos")
+		log := slogctx.FromCtx(ctx)
 
-	for _, channelId := range channelIds {
-		// TODO: replace with proper logger
-		fmt.Printf("getting videos for channel: %s\n", channelId)
-
-		storedVideoIds, err := db.GetVideoIds(ctx, channelId)
+		channelIds, err := db.GetChannelIds(ctx)
 		if err != nil {
-			return err
+			w.WriteHeader(http.StatusInternalServerError)
+			log = log.With("error", err.Error())
+			log.Error("could not get channel ids")
+			return
 		}
 
-		// TODO: remove deleted videos from db too?
-		allVideoIds, err := GetVideoIds(ctx, channelId)
-		if err != nil {
-			return err
+		for _, channelId := range channelIds {
+			clog := log.With("channel_id", channelId)
+			clog.Info("getting videos for channel")
+
+			storedVideoIds, err := db.GetVideoIds(ctx, channelId)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				clog = log.With("error", err.Error())
+				clog.Error("could not get channel's video IDs from db")
+				return
+			}
+
+			// TODO: remove deleted videos from db too?
+			allVideoIds, err := GetVideoIds(ctx, channelId)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				clog = log.With("error", err.Error())
+				clog.Error("could not get channel's video IDs from yt api")
+				return
+			}
+
+			videosToGet := inAnotInB(allVideoIds, storedVideoIds)
+			// TODO: this can be more efficient with transactions, temp solution
+			for _, vId := range videosToGet {
+				vlog := clog.With("video_id", vId)
+				video, err := GetVideo(vId)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					vlog = log.With("error", err.Error())
+					vlog.Error("could not get video with yt_dlp")
+					return
+				}
+				err = db.PutVideo(ctx, video)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					vlog = log.With("error", err.Error())
+					vlog.Error("error putting video in db")
+					return
+				}
+				vlog.Info("put video in db")
+			}
+			clog.Info("got all videos for channel")
 		}
 
-		videosToGet := inAnotInB(allVideoIds, storedVideoIds)
-		// TODO: this can be more efficient with transactions, temp solution
-		for _, vId := range videosToGet {
-			fmt.Printf("getting video: %s\n", vId)
-			video, err := GetVideo(vId)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("got video: %s\n", vId)
-			err = db.PutVideo(ctx, video)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("video: %s put in database\n", vId)
-		}
-		// TODO: logging here with channel ids to know when we are finished with one
 		// TODO: transcripts and text strings for videos that don't have them
-	}
-	return nil
+
+		w.WriteHeader(http.StatusOK)
+	})
 }

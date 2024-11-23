@@ -2,6 +2,7 @@ package youtube
 
 import (
 	"context"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -9,9 +10,17 @@ import (
 	"github.com/joho/godotenv"
 )
 
+func init() {
+	dir, _ := os.Getwd()
+	splitDir := strings.Split(dir, "/")
+	if splitDir[len(splitDir)-1] == "youtube" {
+		os.Chdir("..")
+	}
+}
+
 // Warning, these are integration tests
 func TestGetVideoIds(t *testing.T) {
-	err := godotenv.Load("../.env")
+	err := godotenv.Load(".env")
 	if err != nil {
 		t.Fatalf("could not load .env")
 	}

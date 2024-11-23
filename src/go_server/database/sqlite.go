@@ -28,7 +28,7 @@ func (c SqLiteConnection) PutVideo(ctx context.Context, vid *types.Video) error 
             description,
             video_id,
             channel_id,
-            channel_name,
+            channel_name
         ) VALUES (
             $1,
             $2,
@@ -38,13 +38,12 @@ func (c SqLiteConnection) PutVideo(ctx context.Context, vid *types.Video) error 
             $6,
             $7,
             $8,
-            $9,
-            $10
+            $9
         )`
 	result, err := c.db.Exec(
 		sqlStatement,
 		vid.Title,
-		vid.UploadDate.Time,
+		vid.UploadDate.Time.Format("2006-01-02 15:04:05"),
 		vid.URL,
 		vid.Thumbnail,
 		vid.Transcript,
@@ -81,7 +80,7 @@ func (c SqLiteConnection) GetChannelIds(ctx context.Context) ([]string, error) {
 }
 
 func (c SqLiteConnection) GetVideoIds(ctx context.Context, channelId string) ([]string, error) {
-	sqlStatement := `SELECT video_id FROM videos WHERE channelId = $1`
+	sqlStatement := `SELECT video_id FROM videos WHERE channel_id = $1`
 	rows, err := c.db.Query(sqlStatement, channelId)
 	if err != nil {
 		return nil, err

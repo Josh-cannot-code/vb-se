@@ -6,81 +6,65 @@ import (
 	"fmt"
 	"go_server/database"
 	"go_server/youtube"
+	"log/slog"
+	"os"
 
-	"log"
 	"net/http"
 
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
+	slogctx "github.com/veqryn/slog-context"
 )
 
-func main() {
-	ctx := context.Background()
-
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Could not load environment vars: " + err.Error())
-	}
-	sqlDb, err := sql.Open("sqlite3", "../db/vb-se.db")
-	defer sqlDb.Close()
-
-	db := database.NewSqLiteConnection(sqlDb)
-	//	vid := youtube.GetVideo("REi089fakFI")
-	err = youtube.RefreshVideos(ctx, db)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	//	ctx := context.Background()
-
-	/*
-
-		cfg := mysql.Config{
-			User:                 os.Getenv("USERNAME"),
-			Passwd:               os.Getenv("PASSWORD"),
-			Net:                  "tcp",
-			Addr:                 os.Getenv("HOST"),
-			DBName:               os.Getenv("DATABASE"),
-			AllowNativePasswords: true,
-		}
-
-		db, err := sql.Open("mysql", cfg.FormatDSN())
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		pingErr := db.Ping()
-		if pingErr != nil {
-			log.Fatal(pingErr)
-		}
-		fmt.Println("DB connected")
-
-		http.Handle("/", http.HandlerFunc(testHandler(db)))
-	*/
-
-	fmt.Println("Listening on http://localhost:3001")
-	err = http.ListenAndServe(":3001", nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+func LoggerMiddleware(next http.Handler, logger *slog.Logger) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Add slogger to the context
+		ctx := slogctx.NewCtx(r.Context(), logger)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
-func testHandler(db *sql.DB) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		rows, err := db.Query("SELECT video_id FROM videos")
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer rows.Close()
+func main() {
+	// Load environment variables
+	err := godotenv.Load(".env")
+	if err != nil {
+		panic("Could not load env")
+	}
 
-		var rowdata []byte
-		rows.Next()
-		rows.Scan(&rowdata)
-		fmt.Println(rowdata)
+	// Initialize logger
+	// TODO: add info about location and stuff here
+	defaultAttrs := []slog.Attr{
+		slog.String("service", "vb-be"),
+		slog.String("environment", "dev"), // TODO: dev prod envs
+	}
 
-		_, err = w.Write(rowdata)
-		if err != nil {
-			log.Fatal("Could not write response")
-		}
-	})
+	baseHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}).WithAttrs(defaultAttrs)
+	customHandler := slogctx.NewHandler(baseHandler, nil)
+	slog.SetDefault(slog.New(customHandler))
+
+	ctx := slogctx.NewCtx(context.Background(), slog.Default())
+	log := slogctx.FromCtx(ctx)
+
+	sqlDb, err := sql.Open("sqlite3", "../db/vb-se.db")
+	if err != nil {
+		log.Error("could not connect to db", "message", err.Error())
+		return
+	}
+	if err = sqlDb.Ping(); err != nil {
+		log.Error("not connected to db", "message", err.Error())
+		return
+	}
+	defer sqlDb.Close()
+	db := database.NewSqLiteConnection(sqlDb)
+
+	mux := http.NewServeMux()
+	refreshHandler := youtube.RefreshVideos(db)
+	mux.Handle("/", refreshHandler)
+	muxWithLog := LoggerMiddleware(mux, log)
+
+	fmt.Println("Listening on http://localhost:3001")
+	err = http.ListenAndServe(":3001", muxWithLog)
+	if err != nil {
+		log.Error("could not listen and serve", "message", err.Error())
+	}
 }
