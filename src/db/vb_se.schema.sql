@@ -2,7 +2,7 @@ CREATE TABLE `channels` (
   `id` integer PRIMARY KEY,
   `channel_id` varchar(255),
   `channel_name` varchar(255),
-  `created_at` timestamp
+  `created_at` timestamp default current_timestamp
 );
 
 CREATE TABLE `videos` (
@@ -11,12 +11,12 @@ CREATE TABLE `videos` (
   `upload_date` date,
   `url` varchar(255),
   `thumbnail` varchar(255),
-  `transcript` longtext,
+  `transcript` text,
   `description` text,
   `video_id` varchar(255),
   `channel_id` integer,
   `channel_name` varchar(255),
-  `video_text_data` longtext,
+  `video_text_data` text,
   `created_at` timestamp default current_timestamp,
   FOREIGN KEY (`channel_id`) REFERENCES `channels` (`channel_id`)
 );

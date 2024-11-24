@@ -14,10 +14,10 @@ if __name__ == "__main__":
             "quiet": True,
     }
 
-    sys.stderr = open(os.devnull, "w")
+    videoId = args.videoId.replace("'", "")
+
     with yt_dlp.YoutubeDL(options) as ydl:
-        result = ydl.extract_info('https://www.youtube.com/watch?v=' + args.videoId, download=False)
-    sys.stderr = sys.__stdout__
+        result = ydl.extract_info('https://www.youtube.com/watch?v=' + videoId, download=False)
 
     video = {
         'id': result['id'],

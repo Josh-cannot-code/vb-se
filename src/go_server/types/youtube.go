@@ -22,6 +22,14 @@ func (u *YTDLPTime) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (u *YTDLPTime) MarshalJSON() ([]byte, error) {
+	value, err := json.Marshal(u.Time)
+	if err != nil {
+		return nil, err
+	}
+	return value, nil
+}
+
 type Video struct {
 	ID          string    `json:"id"`
 	Title       string    `json:"title"`

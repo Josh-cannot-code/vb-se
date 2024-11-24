@@ -2,6 +2,7 @@ package youtube
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Runs before tests
 func init() {
 	dir, _ := os.Getwd()
 	splitDir := strings.Split(dir, "/")
@@ -48,9 +50,20 @@ func TestGetVideo(t *testing.T) {
 	}
 }
 
+func TestGetVideoError(t *testing.T) {
+	_, err := GetVideo("not a video id")
+	fmt.Printf("error: %s", err.Error())
+	if err == nil {
+		t.Fatalf("should have errored")
+	}
+}
+
 func TestGetVideoTranscripts(t *testing.T) {
 	videoIds := []string{"REi089fakFI"}
-	tMap := GetVideoTranscripts(videoIds)
+	tMap, err := GetVideoTranscripts(videoIds)
+	if err != nil {
+		t.Fatalf("error getting video transcripts: %s", err.Error())
+	}
 	value := strings.TrimSpace(tMap[videoIds[0]])
 	expected := "First Characters"
 

@@ -7,7 +7,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="dowload_video")
     parser.add_argument("videoIds")
     args = parser.parse_args()
-    videoIds = args.videoIds.split(",")
+    videoIds = args.videoIds.replace("'", "").split(",")
 
     transcripts, unretrievable_transcripts = YouTubeTranscriptApi.get_transcripts(videoIds, continue_after_error=True)
 

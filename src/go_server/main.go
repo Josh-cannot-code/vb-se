@@ -65,6 +65,6 @@ func main() {
 	fmt.Println("Listening on http://localhost:3001")
 	err = http.ListenAndServe(":3001", muxWithLog)
 	if err != nil {
-		log.Error("could not listen and serve", "message", err.Error())
+		panic(err)
 	}
 }
