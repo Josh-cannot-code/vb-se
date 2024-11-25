@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 )
 
@@ -22,16 +23,18 @@ func (u *YTDLPTime) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (u *YTDLPTime) MarshalJSON() ([]byte, error) {
-	value, err := json.Marshal(u.Time)
-	if err != nil {
-		return nil, err
+func (u *YTDLPTime) Scan(value interface{}) error {
+	time, ok := value.(time.Time)
+	if !ok {
+		return errors.New("incompatable type")
 	}
-	return value, nil
+	u.Time = time
+	return nil
 }
 
 type Video struct {
 	ID          string    `json:"id"`
+	VideoID     string    `json:"video_id"`
 	Title       string    `json:"title"`
 	Thumbnail   string    `json:"thumbnail"`
 	ChannelID   string    `json:"channel_id"`

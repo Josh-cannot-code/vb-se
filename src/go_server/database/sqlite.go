@@ -139,3 +139,39 @@ func (c SqLiteConnection) UpdateVideoTextData(ctx context.Context) error {
 	return nil
 
 }
+
+func (c SqLiteConnection) GetVideos() ([]types.Video, error) {
+	sqlStatement := `SELECT
+            title,
+            upload_date,
+            url,
+            thumbnail,
+            description,
+            video_id,
+            channel_id,
+            channel_name
+        FROM videos LIMIT 10`
+	rows, err := c.db.Query(sqlStatement)
+	if err != nil {
+		return nil, err
+	}
+	var videos []types.Video
+	for rows.Next() {
+		var cv types.Video
+		err = rows.Scan(
+			&cv.Title,
+			&cv.UploadDate,
+			&cv.URL,
+			&cv.Thumbnail,
+			&cv.Description,
+			&cv.VideoID,
+			&cv.ChannelID,
+			&cv.ChannelName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		videos = append(videos, cv)
+	}
+	return videos, nil
+}

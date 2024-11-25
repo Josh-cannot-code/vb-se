@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"go_server/database"
+	"go_server/frontend"
 	"go_server/youtube"
 	"log/slog"
 	"os"
@@ -57,9 +58,16 @@ func main() {
 	defer sqlDb.Close()
 	db := database.NewSqLiteConnection(sqlDb)
 
-	mux := http.NewServeMux()
+	// Handler declarations
 	refreshHandler := youtube.RefreshVideos(db)
-	mux.Handle("/", refreshHandler)
+	indexHandler := frontend.Index()
+	searchVideosHandler := frontend.SearchVideos(db)
+
+	mux := http.NewServeMux()
+	// Register handlers
+	mux.Handle("GET /refresh", refreshHandler)
+	mux.Handle("GET /", indexHandler)
+	mux.Handle("GET /search_videos", searchVideosHandler)
 	muxWithLog := LoggerMiddleware(mux, log)
 
 	fmt.Println("Listening on http://localhost:3001")
