@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"go_server/types"
 	"log"
-	"strings"
 
 	"golang.org/x/net/context"
 )
@@ -131,69 +130,62 @@ func (c SqLiteConnection) UpdateVideoTranscripts(ctx context.Context, transcript
 	return nil
 }
 
+// TODO: need to update virtual table instead
 func (c SqLiteConnection) UpdateVideoTextData(ctx context.Context) error {
-	sqlStatement := `UPDATE videos SET video_text_data = CONCAT(title, ' ', description, ' ', transcript) WHERE video_text_data IS NULL`
+	sqlStatement := `INSERT INTO video_text_data
+        (video_id, title, description, transcript)
+        SELECT video_id, title, description, transcript FROM videos v
+        WHERE NOT EXISTS
+        (SELECT video_id FROM video_text_data vtd WHERE v.video_id = vtd.video_id)`
 	_, err := c.db.Exec(sqlStatement)
 	if err != nil {
 		return fmt.Errorf("error updating video text data: %e", err)
 	}
 	return nil
-
 }
 
-func (c SqLiteConnection) SearchVideos(query string) ([]types.Video, error) {
-	// Full text search to get the video ids matching the term
-	// TODO: also get the matching text and highlight
-	sqlVirtTabSearch := `SELECT video_id from video_text_data($1)`
-	rows, err := c.db.Query(sqlVirtTabSearch, query)
+func (c SqLiteConnection) SearchVideos(query string) ([]types.VCardData, error) {
+	// TODO: title and description snippets as well
+	sqlStatement := `
+        SELECT
+            snippet(video_text_data, 1, '<b>', '</b>', '...', 10),
+            snippet(video_text_data, 2, '<b>', '</b>', '...', 10),
+            snippet(video_text_data, 3, '<b>', '</b>', '...', 10),
+            v.title,
+            v.upload_date,
+            v.url,
+            v.thumbnail,
+            v.description,
+            v.video_id,
+            v.channel_id,
+            v.channel_name
+        FROM
+            video_text_data ($1) vtd
+        JOIN
+            videos v
+        ON
+            vtd.video_id = v.video_id`
+
+	rows, err := c.db.Query(sqlStatement, query)
 	if err != nil {
 		return nil, err
 	}
-	var videosToGet []string
-	for rows.Next() {
-		var vId string
-		err = rows.Scan(&vId)
-		if err != nil {
-			return nil, err
-		}
-		videosToGet = append(videosToGet, vId)
-	}
 
-	args := make([]interface{}, len(videosToGet))
-	for i, id := range videosToGet {
-		args[i] = id
-	}
-	if len(args) == 0 {
-		return nil, nil
-	}
-
-	// Get the matching videos from the db
-	sqlStatement := `SELECT
-            title,
-            upload_date,
-            url,
-            thumbnail,
-            description,
-            video_id,
-            channel_id,
-            channel_name
-        FROM videos WHERE video_id IN (?` + strings.Repeat(",?", len(args)-1) + `)`
-	rows, err = c.db.Query(sqlStatement, args...)
-	if err != nil {
-		return nil, err
-	}
-	var videos []types.Video
+	var videos []types.VCardData
 	for rows.Next() {
-		var cv types.Video
+		var cv types.VCardData
 		err = rows.Scan(
-			&cv.Title,
-			&cv.UploadDate,
-			&cv.URL,
-			&cv.Thumbnail,
-			&cv.Description,
-			&cv.VideoID,
-			&cv.ChannelID,
-			&cv.ChannelName,
+			&cv.TitleSnippet,
+			&cv.DescSnippet,
+			&cv.TransSnippet,
+			&cv.Video.Title,
+			&cv.Video.UploadDate,
+			&cv.Video.URL,
+			&cv.Video.Thumbnail,
+			&cv.Video.Description,
+			&cv.Video.VideoID,
+			&cv.Video.ChannelID,
+			&cv.Video.ChannelName,
 		)
 		if err != nil {
 			return nil, err

@@ -44,8 +44,6 @@
         }
 
         .search {
-            flex-grow: 1;
-            display: flex;
             justify-content: center;
             align-items: center;
         }
@@ -56,16 +54,27 @@
             border-radius: 0.2rem;
             background: var(--dark-green);
             font-size: 14pt;
-            width: 20rem;
-            margin: 0.5rem;
+            width: min(90%, 40rem);
+            margin: auto;
+            display:block;
+        }
+
+        .search input[type="text"]:focus {
+            outline:none;
         }
 
         .search button[type="submit"] {
-            padding: 0.3rem;
+            padding-top: 0.3rem;
+            padding-bottom: 0.3rem;
+            padding-left; 0.5rem;
+            padding-right; 0.5rem;
             background: var(--dark-green);
             border: none;
             border-radius: 0.2rem;
             font-size: 14pt;
+            margin: auto;
+            margin-top: 1rem;
+            display: block;
         }
 
         .video-container {
@@ -93,25 +102,57 @@
             text-overflow: ellipsis;
             max-height: 8rem;
         }
+        footer {
+            background: var(--dark-green);
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            height: 3rem;
+            position: absolute;
+            display: grid;
+            grid-template-columns: 33% 33% 33%;
+            color: black;
+        }
+        #page-contianer {
+            position: relative;
+            min-height: 100vh;
+        }
+        #content-wrap{
+            padding-bottom: 5rem; /* footer height plus a little */
+        }
     </style>
 </head>
 
 <body>
+<div id="page-contianer">
     <h1 id="page-title">
         Vlogbrothers Search Engine
     </h1>
-    <div class="search">
-        <form>
-            <input type="text" placeholder="Search Vlogbrothers Youtube Channel">
-            <button type="submit" hx-get="/videos?search=em-dash" hx-swap="outerHTML" hx-target="#video-container">
-                Search
-            </button>
-        </form>
+    <div id="content-wrap">
+        <div class="search">
+            <form 
+                hx-get="/videos"
+                hx-swap="outerHTML"
+                hx-target="#video-container"
+            >
+                <input type="text" name="search" placeholder="Search Vlogbrothers Youtube Channel">
+                <button type="submit">
+                    Search
+                </button>
+            </form>
+        </div>
+        <div class="video-container" id="video-container">
+            <h2>
+                Search for something like "em dash"
+            </h2>
+        </div>
     </div>
-    <div class="video-container" id="video-container">
-        <h2>
-            Search for something like "em dash"
-        </h2>
-    </div>
+    <footer>
+        <p style="grid-column=1;">j.dallacqua1@gmail.com</p>
+        <p style="grid-column=2;">Some other text here</p>
+        <p style="grid-column=3;">For Jade</p>
+    </footer>
+</div>
 </body>
 </html>

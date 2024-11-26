@@ -44,3 +44,10 @@ type Video struct {
 	ChannelName string    `json:"channel_name"`
 	Transcript  string
 }
+
+type VCardData struct {
+	TitleSnippet string
+	DescSnippet  string
+	TransSnippet string
+	Video        Video
+}
