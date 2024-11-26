@@ -12,6 +12,7 @@ import (
 
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	slogctx "github.com/veqryn/slog-context"
@@ -63,15 +64,14 @@ func main() {
 	indexHandler := frontend.Index()
 	searchVideosHandler := frontend.SearchVideos(db)
 
-	mux := http.NewServeMux()
+	r := mux.NewRouter()
 	// Register handlers
-	mux.Handle("GET /refresh", refreshHandler)
-	mux.Handle("GET /", indexHandler)
-	mux.Handle("GET /search_videos", searchVideosHandler)
-	muxWithLog := LoggerMiddleware(mux, log)
+	r.Handle("/refresh", refreshHandler).Methods("GET")
+	r.Handle("/", indexHandler).Methods("GET")
+	r.Handle("/videos", searchVideosHandler).Methods("GET")
 
 	fmt.Println("Listening on http://localhost:3001")
-	err = http.ListenAndServe(":3001", muxWithLog)
+	err = http.ListenAndServe(":3001", LoggerMiddleware(r, log))
 	if err != nil {
 		panic(err)
 	}

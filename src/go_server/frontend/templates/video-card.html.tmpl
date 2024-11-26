@@ -1,9 +1,13 @@
-<div class="video-card">
-    <img src="{{ .Thumbnail }}" , alt="Thumbnail" , class="thumbnail">
-    <h4 class="video-title">
-        {{ .Title }}
-    </h4>
-    <p class="video-description">
-        {{ .Description }}
-    </p>
+<div class="video-container" id="video-container">
+    {{ range .}}
+    <div class="video-card">
+        <img src="{{ .Thumbnail }}" , alt="Thumbnail" , class="thumbnail">
+        <h4 class="video-title">
+            {{ .Title }}
+        </h4>
+        <p class="video-description">
+            {{ .Description }}
+        </p>
+    </div>
+    {{ end }}
 </div>

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go_server/types"
 	"log"
+	"strings"
 
 	"golang.org/x/net/context"
 )
@@ -140,7 +141,33 @@ func (c SqLiteConnection) UpdateVideoTextData(ctx context.Context) error {
 
 }
 
-func (c SqLiteConnection) GetVideos() ([]types.Video, error) {
+func (c SqLiteConnection) SearchVideos(query string) ([]types.Video, error) {
+	// Full text search to get the video ids matching the term
+	// TODO: also get the matching text and highlight
+	sqlVirtTabSearch := `SELECT video_id from video_text_data($1)`
+	rows, err := c.db.Query(sqlVirtTabSearch, query)
+	if err != nil {
+		return nil, err
+	}
+	var videosToGet []string
+	for rows.Next() {
+		var vId string
+		err = rows.Scan(&vId)
+		if err != nil {
+			return nil, err
+		}
+		videosToGet = append(videosToGet, vId)
+	}
+
+	args := make([]interface{}, len(videosToGet))
+	for i, id := range videosToGet {
+		args[i] = id
+	}
+	if len(args) == 0 {
+		return nil, nil
+	}
+
+	// Get the matching videos from the db
 	sqlStatement := `SELECT
             title,
             upload_date,
@@ -150,8 +177,8 @@ func (c SqLiteConnection) GetVideos() ([]types.Video, error) {
             video_id,
             channel_id,
             channel_name
-        FROM videos LIMIT 10`
-	rows, err := c.db.Query(sqlStatement)
+        FROM videos WHERE video_id IN (?` + strings.Repeat(",?", len(args)-1) + `)`
+	rows, err = c.db.Query(sqlStatement, args...)
 	if err != nil {
 		return nil, err
 	}

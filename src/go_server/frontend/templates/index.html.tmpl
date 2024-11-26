@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <script>{{printf "%s" . }}</script>
+    <script>{{ . }}</script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root {
@@ -22,6 +22,17 @@
             border: none;
             font-weight: lighter;
             font-size: 40pt;
+        }
+        h2 {
+            text-align: center;
+            padding: 2rem;
+            margin: 0;
+            margin-bottom: 0.5rem;
+            color: var(--dark-green);
+            border: none;
+            font-weight: lighter;
+            font-size: 30pt;
+            grid-column: 2;
         }
 
         body {
@@ -92,62 +103,15 @@
     <div class="search">
         <form>
             <input type="text" placeholder="Search Vlogbrothers Youtube Channel">
-            <button type="submit" hx-get="/search_videos" hx-swap="outerHTML" hx-target="#videoc">
+            <button type="submit" hx-get="/videos?search=em-dash" hx-swap="outerHTML" hx-target="#video-container">
                 Search
             </button>
         </form>
     </div>
-    <div class="video-container">
-        <div class="video-card" id="videoc">
-            <img src="https://i.ytimg.com/vi_webp/zEILyy_m1Ys/maxresdefault.webp" , alt="Thumbnail" , class="thumbnail">
-            <h4 class="video-title">
-                Most Subscribed: A Song
-            </h4>
-            <p class="video-description">
-                The T-Shirt is at http://www.dftba.com
-
-
-                HERE ARE A LOT OF LINKS TO NERDFIGHTASTIC THINGS:
-
-                Shirts and Stuff: http://dftba.com/artist/30/Vlogbrothers
-                Hank's Music: http://dftba.com/artist/15/Hank-Green
-                John's Books: http://amzn.to/j3LYqo
-
-                ======================
-
-                Hank's Twitter: http://www.twitter.com/hankgreen
-                Hank's Facebook: http://www.facebook.com/hankimon
-                Hank's tumblr: http://edwardspoonhands.tumblr.com
-
-                John's Twitter: http://www.twitter.com/realjohngreen
-                John's Facebook: http://www.facebook.com/johngreenfans
-                John's tumblr: http://fishingboatproceeds.tumblr.com
-
-                ======================
-
-                Other Channels
-                Crash Course: http://www.youtube.com/crashcourse
-                SciShow: http://www.youtube.com/scishow
-                Gaming: http://www.youtube.com/hankgames
-                VidCon: http://www.youtube.com/vidcon
-                Hank's Channel: http://www.youtube.com/hankschannel
-                Truth or Fail: http://www.youtube.com/truthorfail
-
-                ======================
-
-                Nerdfighteria
-                http://effyeahnerdfighters.com/
-                http://effyeahnerdfighters.com/nftumblrs
-                http://reddit.com/r/nerdfighters
-                http://nerdfighteria.info/
-
-                A Bunny
-                (\(\
-                ( - -)
-                ((') (')
-            </p>
-        </div>
+    <div class="video-container" id="video-container">
+        <h2>
+            Search for something like "em dash"
+        </h2>
     </div>
 </body>
-
 </html>
