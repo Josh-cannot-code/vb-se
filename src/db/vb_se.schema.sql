@@ -16,7 +16,9 @@ CREATE TABLE `videos` (
   `video_id` varchar(255),
   `channel_id` integer,
   `channel_name` varchar(255),
-  `video_text_data` text,
   `created_at` timestamp default current_timestamp,
   FOREIGN KEY (`channel_id`) REFERENCES `channels` (`channel_id`)
 );
+
+CREATE VIRTUAL TABLE `video_text_data`
+USING FTS5(video_id,title,description,transcript);
