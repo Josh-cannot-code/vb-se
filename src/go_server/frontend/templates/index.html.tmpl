@@ -7,7 +7,8 @@
     <style>
         :root {
             --light-green: #3B8C6E;
-            --dark-green: #27592F;
+            /*--dark-green: #27592F;*/
+            --jade: #00bd71;
             --soft-orange: #F2A25C;
             --soft-brown: #A6653F;
             --soft-red: #A63232;
@@ -18,20 +19,29 @@
             padding: 2rem;
             margin: 0;
             margin-bottom: 0.5rem;
-            color: var(--dark-green);
+            color: var(--jade);
             border: none;
             font-weight: lighter;
             font-size: 40pt;
+        }
+        @media only screen and (max-width: 600px) {
+           #page-title {
+                font-size: 20pt;
+           } 
+           h2 {
+                font-size: 15pt;
+           }
+
         }
         h2 {
             text-align: center;
             padding: 2rem;
             margin: 0;
             margin-bottom: 0.5rem;
-            color: var(--dark-green);
+            color: var(--jade);
             border: none;
             font-weight: lighter;
-            font-size: 30pt;
+            font-size: 25pt;
             grid-column: 2;
         }
 
@@ -49,12 +59,14 @@
         }
 
         .search input[type="text"] {
-            padding: 0.3rem;
+            padding: 0.5rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
             border: none;
-            border-radius: 0.2rem;
-            background: var(--dark-green);
+            border-radius: 1rem;
+            background: var(--jade);
             font-size: 14pt;
-            width: min(90%, 40rem);
+            width: min(80%, 40rem);
             margin: auto;
             display:block;
         }
@@ -64,13 +76,13 @@
         }
 
         .search button[type="submit"] {
-            padding-top: 0.3rem;
-            padding-bottom: 0.3rem;
-            padding-left; 0.5rem;
-            padding-right; 0.5rem;
-            background: var(--dark-green);
+            text-align: center;
+            padding: 1rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            background: var(--jade);
             border: none;
-            border-radius: 0.2rem;
+            border-radius: 1rem;
             font-size: 14pt;
             margin: auto;
             margin-top: 1rem;
@@ -87,7 +99,7 @@
             margin-top: 1rem;
             padding: 1rem;
             border-radius: 0.7rem;
-            background: var(--dark-green);
+            background: var(--jade);
         }
 
         .thumbnail {
@@ -103,7 +115,7 @@
             max-height: 8rem;
         }
         footer {
-            background: var(--dark-green);
+            background: var(--jade);
             left: 0;
             bottom: 0;
             width: 100%;
@@ -121,6 +133,10 @@
         #content-wrap{
             padding-bottom: 5rem; /* footer height plus a little */
         }
+        b {}
+        p {
+            padding: 0.3rem;
+        }
     </style>
 </head>
 
@@ -133,7 +149,6 @@
         <div class="search">
             <form 
                 hx-get="/videos"
-                hx-swap="outerHTML"
                 hx-target="#video-container"
             >
                 <input type="text" name="search" placeholder="Search Vlogbrothers Youtube Channel">
@@ -150,7 +165,7 @@
     </div>
     <footer>
         <p style="grid-column=1;">j.dallacqua1@gmail.com</p>
-        <p style="grid-column=2;">Some other text here</p>
+        <p style="grid-column=2;"></p>
         <p style="grid-column=3;">For Jade</p>
     </footer>
 </div>

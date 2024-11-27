@@ -1,17 +1,15 @@
-<div class="video-container" id="video-container">
-    {{ range .}}
-    <div class="video-card">
-        <img src="{{ .Video.Thumbnail }}" , alt="Thumbnail" , class="thumbnail">
-        <h4 class="video-title">
-            {{ .Video.Title }}
-        </h4>
-        <p>
-            {{ .DescSnippet }}
-        </p>
-        <h5>Transcript Match:</h5>
-        <p>
-            {{ .TransSnippet }}
-        </p>
-    </div>
-    {{ end }}
+{{ range .}}
+<div class="video-card">
+    <img src="{{ .Video.Thumbnail }}" , alt="Thumbnail" , class="thumbnail">
+    <h4 class="video-title">
+        {{ .Video.Title }}
+    </h4>
+    <p>
+        {{ .DescSnippet }}
+    </p>
+    <h5>Transcript Match:</h5>
+    <p>
+        {{ .TransSnippet }}
+    </p>
 </div>
+{{ end }}

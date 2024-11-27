@@ -2,8 +2,8 @@ package frontend
 
 import (
 	"go_server/database"
-	"html/template"
 	"net/http"
+	"text/template"
 
 	slogctx "github.com/veqryn/slog-context"
 )
@@ -23,7 +23,7 @@ func SearchVideos(db database.Repository) http.HandlerFunc {
 		const templateFilePath = "./frontend/templates/video-card.html.tmpl"
 		htmlTemplate, err := template.ParseFiles(templateFilePath)
 		if err != nil {
-			qlog.Error("could not load html template from file", "error", err.Error())
+			qlog.Error("could not load video html template from file", "error", err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -35,9 +35,11 @@ func SearchVideos(db database.Repository) http.HandlerFunc {
 			return
 		}
 
-		// TODO: videos can be length 0
-
-		err = htmlTemplate.Execute(w, videos)
+		if len(videos) == 0 {
+			_, err = w.Write([]byte("<p>No results :(</p>"))
+		} else {
+			err = htmlTemplate.Execute(w, videos)
+		}
 		if err != nil {
 			qlog.Error("could not write html to response", "error", err.Error())
 		}

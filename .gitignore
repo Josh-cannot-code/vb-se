@@ -2,3 +2,5 @@
 *.idea
 *.DS_STORE
 src/db/vb-se.db
+src/go_server/tmp
+src/go_server/.air.toml
