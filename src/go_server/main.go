@@ -61,7 +61,7 @@ func main() {
 
 	// Handler declarations
 	refreshHandler := youtube.RefreshVideos(db)
-	indexHandler := frontend.Index()
+	indexHandler := frontend.Index(db)
 	searchVideosHandler := frontend.SearchVideos(db)
 
 	r := mux.NewRouter()

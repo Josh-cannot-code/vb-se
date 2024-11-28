@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <script>{{ . }}</script>
+    <script>{{ .Script }}</script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root {
@@ -126,6 +126,9 @@
             grid-template-columns: 33% 33% 33%;
             color: black;
         }
+        footer p {
+            margin: 0.8rem;
+        }
         #page-contianer {
             position: relative;
             min-height: 100vh;
@@ -134,12 +137,18 @@
             padding-bottom: 5rem; /* footer height plus a little */
         }
         b {}
-        p {
-            padding: 0.3rem;
-        }
     </style>
 </head>
-
+<script>
+function updateUrlWithState(state) {
+    const url = new URL(window.location.href);
+    // Add state data as query parameters
+    Object.keys(state).forEach(key => {
+        url.searchParams.set(key, state[key]);
+    });
+    history.pushState({}, '', url); // Updates the URL without reloading
+}
+</script>
 <body>
 <div id="page-contianer">
     <h1 id="page-title">
@@ -150,17 +159,16 @@
             <form 
                 hx-get="/videos"
                 hx-target="#video-container"
+                hx-on:submit="updateUrlWithState({search: document.getElementById('search-bar').value})"
             >
-                <input type="text" name="search" placeholder="Search Vlogbrothers Youtube Channel">
+                <input id="search-bar" type="text" name="search" placeholder="Search Vlogbrothers Youtube Channel">
                 <button type="submit">
                     Search
                 </button>
             </form>
         </div>
         <div class="video-container" id="video-container">
-            <h2>
-                Search for something like "em dash"
-            </h2>
+            {{ .Videos }}
         </div>
     </div>
     <footer>

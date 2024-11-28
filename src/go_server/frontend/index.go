@@ -1,6 +1,7 @@
 package frontend
 
 import (
+	"go_server/database"
 	"net/http"
 	"os"
 	"text/template"
@@ -8,7 +9,12 @@ import (
 	slogctx "github.com/veqryn/slog-context"
 )
 
-func Index() http.HandlerFunc {
+type indexData struct {
+	Videos string
+	Script string
+}
+
+func Index(db database.Repository) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get logger
 		ctx := slogctx.With(r.Context(), "function", "index")
@@ -25,13 +31,26 @@ func Index() http.HandlerFunc {
 		}
 
 		const htmxFilePath = "./frontend/templates/htmx.min.js"
-		data, err := os.ReadFile(htmxFilePath)
+		script, err := os.ReadFile(htmxFilePath)
 		if err != nil {
 			log.Error("could not load htmx from file", "error", err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		err = htmlTemplate.Execute(w, string(data))
+
+		var data indexData
+		data.Script = string(script)
+		if query := r.URL.Query().Get("search"); query != "" {
+			videos, err := GetVideosHTML(db, query)
+			if err != nil {
+				log.Error("could not get videos", "error", err.Error())
+			}
+			data.Videos = *videos
+		} else {
+			data.Videos = "<h2>Search for something like em dash</h2>"
+		}
+
+		err = htmlTemplate.Execute(w, data)
 		if err != nil {
 			log.Error("could not write html to response", "error", err.Error())
 		}
