@@ -9,6 +9,7 @@ import (
 	"go_server/youtube"
 	"log/slog"
 	"os"
+	"os/exec"
 
 	"net/http"
 
@@ -47,6 +48,13 @@ func main() {
 	if err != nil {
 		log.Warn(".env file not loaded")
 	}
+
+	// Debugging db
+	ls_db_path, err := exec.Command("ls /go-server/db").Output()
+	if err != nil {
+		log.Error("could not ls", "message", err.Error())
+	}
+	log.Info("db_ls", string(ls_db_path))
 
 	sqlDb, err := sql.Open("sqlite3", os.Getenv("SQLITE_PATH"))
 	if err != nil {
