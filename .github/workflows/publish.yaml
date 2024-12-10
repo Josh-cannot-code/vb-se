@@ -14,3 +14,4 @@ jobs:
       - name: Build the vb-se-docker-image
         run: |
           docker build ./src --tag ghcr.io/josh-cannot-code/docker-vb-se:latest
+          docker push ghcr.io/josh-cannot-code/docker-vb-se:latest
