@@ -59,9 +59,7 @@
         }
 
         .search input[type="text"] {
-            padding: 0.5rem;
-            padding-left: 1rem;
-            padding-right: 1rem;
+            padding: 1rem;
             border: none;
             border-radius: 1rem;
             background: var(--jade);
@@ -100,6 +98,17 @@
             padding: 1rem;
             border-radius: 0.7rem;
             background: var(--jade);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .video-card:hover {
+           box-shadow:
+              0 1px 1px hsl(0deg 0% 0% / 0.075),
+              0 2px 2px hsl(0deg 0% 0% / 0.075),
+              0 4px 4px hsl(0deg 0% 0% / 0.075),
+              0 8px 8px hsl(0deg 0% 0% / 0.075),
+              0 16px 16px hsl(0deg 0% 0% / 0.075)
+            ;
         }
 
         .thumbnail {
@@ -107,7 +116,12 @@
             width: 100%;
         }
 
-        .video-title {}
+        .video-title {
+            font-size: 15pt;
+            padding: 1rem;
+            padding-bottom: 0;
+            margin: 0;
+        }
 
         .video-description {
             overflow: hidden;

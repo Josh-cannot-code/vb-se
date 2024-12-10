@@ -1,0 +1,16 @@
+name: publish
+on: [push] # TODO: This should probably be on merge
+jobs:
+  publish-vb-se-docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build the vb-se-docker-image
+        run: |
+          docker build . --tag ghcr.io/josh-cannot-code/docker-vb-se:latest

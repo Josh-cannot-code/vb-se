@@ -27,11 +27,6 @@ func LoggerMiddleware(next http.Handler, logger *slog.Logger) http.Handler {
 }
 
 func main() {
-	// Load environment variables
-	err := godotenv.Load(".env")
-	if err != nil {
-		panic("Could not load env")
-	}
 
 	// Initialize logger
 	// TODO: add info about location and stuff here
@@ -47,13 +42,19 @@ func main() {
 	ctx := slogctx.NewCtx(context.Background(), slog.Default())
 	log := slogctx.FromCtx(ctx)
 
-	sqlDb, err := sql.Open("sqlite3", "../db/vb-se.db")
+	// Load environment variables
+	err := godotenv.Load("../.env")
 	if err != nil {
-		log.Error("could not connect to db", "message", err.Error())
+		log.Warn(".env file not loaded")
+	}
+
+	sqlDb, err := sql.Open("sqlite3", os.Getenv("SQLITE_PATH"))
+	if err != nil {
+		log.Error("could not connect to db", "db_path", os.Getenv("SQLITE_PATH"), "message", err.Error())
 		return
 	}
 	if err = sqlDb.Ping(); err != nil {
-		log.Error("not connected to db", "message", err.Error())
+		log.Error("could not ping db", "db_path", os.Getenv("SQLITE_PATH"), "message", err.Error())
 		return
 	}
 	defer sqlDb.Close()
@@ -70,8 +71,9 @@ func main() {
 	r.Handle("/", indexHandler).Methods("GET")
 	r.Handle("/videos", searchVideosHandler).Methods("GET")
 
-	fmt.Println("Listening on http://localhost:3001")
-	err = http.ListenAndServe(":3001", LoggerMiddleware(r, log))
+	port := os.Getenv("PORT")
+	fmt.Println("Listening on http://localhost:" + port)
+	err = http.ListenAndServe(":"+port, LoggerMiddleware(r, log))
 	if err != nil {
 		panic(err)
 	}
