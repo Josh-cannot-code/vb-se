@@ -33,4 +33,7 @@ EXPOSE 3002
 ENV PORT 3002
 ENV SQLITE_PATH /go_server/db/vb-se.db
 
+# Make the database directory
+RUN mkdir db
+
 CMD [ "/vb-se"]
