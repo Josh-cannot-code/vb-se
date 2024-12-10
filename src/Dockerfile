@@ -34,6 +34,6 @@ ENV PORT 3002
 ENV SQLITE_PATH /go_server/db/vb-se.db
 
 # Make the database directory
-RUN mkdir -p /go-server/db
+RUN mkdir -p db
 
 CMD [ "/vb-se"]
