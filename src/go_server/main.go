@@ -54,7 +54,7 @@ func main() {
 	if err != nil {
 		log.Error("could not ls", "message", err.Error())
 	}
-	log.Info("db_ls", string(ls_db_path))
+	log.Info("ls output", "db_ls", string(ls_db_path))
 
 	sqlDb, err := sql.Open("sqlite3", os.Getenv("SQLITE_PATH"))
 	if err != nil {
