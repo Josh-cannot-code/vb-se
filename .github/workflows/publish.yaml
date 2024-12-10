@@ -13,4 +13,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build the vb-se-docker-image
         run: |
-          docker build . --tag ghcr.io/josh-cannot-code/docker-vb-se:latest
+          docker build ./src --tag ghcr.io/josh-cannot-code/docker-vb-se:latest
