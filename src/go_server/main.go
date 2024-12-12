@@ -29,11 +29,17 @@ func LoggerMiddleware(next http.Handler, logger *slog.Logger) http.Handler {
 
 func main() {
 
+	// Load environment variables
+	err := godotenv.Load("../.env")
+	if err != nil {
+		slog.Warn(".env file not loaded")
+	}
+
 	// Initialize logger
 	// TODO: add info about location and stuff here
 	defaultAttrs := []slog.Attr{
 		slog.String("service", "vb-be"),
-		slog.String("environment", "dev"), // TODO: dev prod envs
+		slog.String("environment", os.Getenv("ENVIRONMENT")), // TODO: dev prod envs
 	}
 
 	baseHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}).WithAttrs(defaultAttrs)
@@ -43,14 +49,9 @@ func main() {
 	ctx := slogctx.NewCtx(context.Background(), slog.Default())
 	log := slogctx.FromCtx(ctx)
 
-	// Load environment variables
-	err := godotenv.Load("../.env")
-	if err != nil {
-		log.Warn(".env file not loaded")
-	}
 
 	// Debugging db
-	ls_db_path, err := exec.Command("ls /go-server/db").Output()
+	ls_db_path, err := exec.Command("ls /go_server/db").Output()
 	if err != nil {
 		log.Error("could not ls", "message", err.Error())
 	}
