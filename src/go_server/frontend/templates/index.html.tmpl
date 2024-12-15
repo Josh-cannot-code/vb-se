@@ -53,9 +53,27 @@
             font-weight: light;
         }
 
+        form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .flex-container {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            width: min(80%, 40rem);
+        }
+
         .search {
             justify-content: center;
             align-items: center;
+            display: flex;
         }
 
         .search input[type="text"] {
@@ -82,9 +100,25 @@
             border: none;
             border-radius: 1rem;
             font-size: 14pt;
-            margin: auto;
-            margin-top: 1rem;
-            display: block;
+            margin: 1rem;
+            display: flex;
+        }
+
+        .search label {
+           color: var(--jade);
+           font-size: 16pt;
+        }
+
+        .search select {
+            text-align: center;
+            padding: 0.5rem;
+            padding-right: 1rem;
+            background: var(--jade);
+            border: none;
+            border-radius: 1rem;
+            font-size: 14pt;
+            margin: 1rem;
+            display: flex;
         }
 
         .video-container {
@@ -173,12 +207,20 @@ function updateUrlWithState(state) {
             <form 
                 hx-get="/videos"
                 hx-target="#video-container"
-                hx-on:submit="updateUrlWithState({search: document.getElementById('search-bar').value})"
+                hx-on:submit="updateUrlWithState({search: document.getElementById('search-bar').value, sorting: document.getElementById('sorting').value})"
             >
                 <input id="search-bar" type="text" name="search" placeholder="Search Vlogbrothers Youtube Channel">
+                <div class="flex-container">
+                <label for="sorting">Sort by:</label>
+                <select name="sorting" id="sorting">
+                    <option value="relevance">Relevance</option>
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                </select>
                 <button type="submit">
                     Search
                 </button>
+                </div>
             </form>
         </div>
         <div class="video-container" id="video-container">

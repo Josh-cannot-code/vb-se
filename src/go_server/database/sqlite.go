@@ -144,8 +144,7 @@ func (c SqLiteConnection) UpdateVideoTextData(ctx context.Context) error {
 	return nil
 }
 
-func (c SqLiteConnection) SearchVideos(query string) ([]types.VCardData, error) {
-	// TODO: title and description snippets as well
+func (c SqLiteConnection) SearchVideos(query string, sorting string) ([]types.VCardData, error) {
 	sqlStatement := `
         SELECT
             snippet(video_text_data, 1, '<b>', '</b>', '...', 10),
@@ -164,7 +163,15 @@ func (c SqLiteConnection) SearchVideos(query string) ([]types.VCardData, error) 
         JOIN
             videos v
         ON
-            vtd.video_id = v.video_id`
+            vtd.video_id = v.video_id
+        `
+
+	switch sorting {
+	case "newest":
+		sqlStatement += `ORDER BY v.upload_date DESC`
+	case "oldest":
+		sqlStatement += `ORDER BY v.upload_date ASC`
+	}
 
 	rows, err := c.db.Query(sqlStatement, query)
 	if err != nil {
