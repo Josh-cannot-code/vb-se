@@ -1,5 +1,8 @@
 name: publish
-on: [push] # TODO: This should probably be on merge
+on: 
+  push:
+    branches:
+      - main
 jobs:
   publish-vb-se-docker-image:
     runs-on: ubuntu-latest
