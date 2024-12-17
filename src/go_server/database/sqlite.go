@@ -42,7 +42,7 @@ func (c SqLiteConnection) PutVideo(ctx context.Context, vid *types.Video) error 
 	result, err := c.db.Exec(
 		sqlStatement,
 		vid.Title,
-		vid.UploadDate.Time.Format("2006-01-02 15:04:05"),
+		vid.UploadDate.Format("2006-01-02 15:04:05"),
 		vid.URL,
 		vid.Thumbnail,
 		vid.Description,
