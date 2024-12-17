@@ -41,7 +41,8 @@ func Index(db database.Repository) http.HandlerFunc {
 		var data indexData
 		data.Script = string(script)
 		if query := r.URL.Query().Get("search"); query != "" {
-			videos, err := GetVideosHTML(db, query)
+			sorting := r.URL.Query().Get("sorting")
+			videos, err := GetVideosHTML(db, query, sorting)
 			if err != nil {
 				log.Error("could not get videos", "error", err.Error())
 			}
