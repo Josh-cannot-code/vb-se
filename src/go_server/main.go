@@ -2,17 +2,16 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"go_server/database"
 	"go_server/frontend"
 	"go_server/youtube"
 	"log/slog"
 	"os"
-	"os/exec"
 
 	"net/http"
 
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
@@ -49,25 +48,35 @@ func main() {
 	ctx := slogctx.NewCtx(context.Background(), slog.Default())
 	log := slogctx.FromCtx(ctx)
 
+	/*
+		sqlDb, err := sql.Open("sqlite3", os.Getenv("SQLITE_PATH"))
+		if err != nil {
+			log.Error("could not connect to db", "db_path", os.Getenv("SQLITE_PATH"), "message", err.Error())
+			return
+		}
+		if err = sqlDb.Ping(); err != nil {
+			log.Error("could not ping db", "db_path", os.Getenv("SQLITE_PATH"), "message", err.Error())
+			return
+		}
+		defer sqlDb.Close()
+		db := database.NewSqLiteConnection(sqlDb)
+	*/
 
-	// Debugging db
-	ls_db_path, err := exec.Command("ls /go_server/db").Output()
+	// Elastic
+	esClient, err := elasticsearch.NewTypedClient(elasticsearch.Config{
+		Addresses: []string{
+			"http://localhost:9200",
+		},
+		APIKey: "OFN2Mno1TUJDejVTWHlHeGlyM2w6LTExemZTQ2xRbE9MVEtYT1kzTjc4UQ==",
+	})
 	if err != nil {
-		log.Error("could not ls", "message", err.Error())
+		log.Error("failed to connect to elasticstack", "message", err.Error())
 	}
-	log.Info("ls output", "db_ls", string(ls_db_path))
 
-	sqlDb, err := sql.Open("sqlite3", os.Getenv("SQLITE_PATH"))
-	if err != nil {
-		log.Error("could not connect to db", "db_path", os.Getenv("SQLITE_PATH"), "message", err.Error())
-		return
-	}
-	if err = sqlDb.Ping(); err != nil {
-		log.Error("could not ping db", "db_path", os.Getenv("SQLITE_PATH"), "message", err.Error())
-		return
-	}
-	defer sqlDb.Close()
-	db := database.NewSqLiteConnection(sqlDb)
+	res := esClient.Info
+	// TODO: need res in loggable format
+	log.Info("Elastic Info retrieved", "elastic_info", res)
+	db := database.NewElasticConnection(esClient)
 
 	// Handler declarations
 	refreshHandler := youtube.RefreshVideos(db)

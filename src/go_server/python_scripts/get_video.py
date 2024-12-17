@@ -20,7 +20,7 @@ if __name__ == "__main__":
         result = ydl.extract_info('https://www.youtube.com/watch?v=' + videoId, download=False)
 
     video = {
-        'id': result['id'],
+        'video_id': result['id'],
         'title': result['title'],
         'thumbnail': result['thumbnail'],
         'channel_id': result['channel_id'],

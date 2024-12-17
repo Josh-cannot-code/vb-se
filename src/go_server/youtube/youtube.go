@@ -82,13 +82,25 @@ func GetVideo(videoId string) (*types.Video, error) {
 		return nil, fmt.Errorf("stderr: %s, err: %w", string(stderr.Bytes()), err)
 	}
 
-	var vid types.Video
+	var vid types.YTDLPVideo
 	err = json.Unmarshal(stdout.Bytes(), &vid)
 	if err != nil {
 		return nil, err
 	}
 
-	return &vid, nil
+	return &types.Video{
+		ID:          vid.ID,
+		VideoID:     vid.VideoID,
+		Title:       vid.Title,
+		Thumbnail:   vid.Thumbnail,
+		Description: vid.Description,
+		UploadDate:  vid.UploadDate.Time,
+		Transcript:  vid.Transcript,
+		URL:         vid.URL,
+		ChannelID:   vid.ChannelID,
+		ChannelName: vid.ChannelName,
+	}, nil
+
 }
 
 // Get all elements in a that do not appear in b
@@ -111,6 +123,31 @@ func inAnotInB(a []string, b []string) []string {
 		}
 	}
 	return result
+}
+
+func GetVideoTranscript(videoId string) (string, error) {
+	path, err := exec.LookPath("python3")
+	if err != nil {
+		return "", err
+	}
+
+	// Get transcripts
+	// TODO: quirk calling script
+	cmd := exec.Command(path, "python_scripts/get_transcripts.py", videoId)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("arg: %s, stderr: %s, err: %w", videoId, string(stderr.Bytes()), err)
+	}
+
+	transcriptMap := make(map[string]string)
+	err = json.Unmarshal(stdout.Bytes(), &transcriptMap)
+	if err != nil {
+		return "", err
+	}
+	return transcriptMap[videoId], nil
 }
 
 func GetVideoTranscripts(videoIds []string) (map[string]string, error) {
@@ -174,23 +211,21 @@ func RefreshVideos(db database.Repository) http.HandlerFunc {
 				return
 			}
 
-			// TODO: remove deleted videos from db too?
 			allVideoIds, err := GetVideoIds(ctx, channelId)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				clog = log.With("error", err.Error())
-				clog.Error("could not get channel's video IDs from yt api")
+				clog.Error("could not get channel's video IDs from google youtube api")
 				return
 			}
 
 			videosToGet := inAnotInB(allVideoIds, storedVideoIds)
 			clog.Info("channel missing videos", "num_missing_vids", len(videosToGet))
-			// TODO: this can be more efficient with transactions, temp solution
+
 			for _, vId := range videosToGet {
 				vlog := clog.With("video_id", vId)
 				video, err := GetVideo(vId)
 				if err != nil {
-					// w.WriteHeader(http.StatusInternalServerError)
 					vlog.Error("could not get video with yt_dlp", "error", err.Error())
 					continue
 				}
@@ -200,6 +235,13 @@ func RefreshVideos(db database.Repository) http.HandlerFunc {
 						ID: vId,
 					}
 				}
+
+				transcript, err := GetVideoTranscript(vId)
+				if err != nil {
+					vlog.Error("could not get video transcript with transcript api", "error", err.Error())
+				}
+				video.Transcript = transcript
+
 				err = db.PutVideo(ctx, video)
 				if err != nil {
 					w.WriteHeader(http.StatusInternalServerError)
@@ -212,57 +254,59 @@ func RefreshVideos(db database.Repository) http.HandlerFunc {
 			clog.Info("got all videos for channel")
 		}
 
-		noTransVIds, err := db.GetNoTranscriptVideoIds(ctx)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			log.Error("could not get videos without transcripts from db", "error", err.Error())
-			return
-		}
-
-		log.Info("getting missing transcripts", "num_missing_transcripts", len(noTransVIds))
-
-		// Paginate request to get transcripts
-		i := 0
-		pageSize := 10
-		for i < len(noTransVIds) {
-			var k int
-			if i+pageSize >= len(noTransVIds) {
-				k = len(noTransVIds)
-			} else {
-				k = i + pageSize
-			}
-
-			glog := log.WithGroup("transcript page")
-			glog.Info("getting transcripts", "start", i, "end", k, "total", len(noTransVIds))
-
-			transcriptMap, err := GetVideoTranscripts(noTransVIds[i:k])
-			i = k // Increment
-
+		/*
+			noTransVIds, err := db.GetNoTranscriptVideoIds(ctx)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				glog.Error("could not get video transcripts", "error", err.Error())
+				log.Error("could not get videos without transcripts from db", "error", err.Error())
 				return
 			}
 
-			err = db.UpdateVideoTranscripts(ctx, transcriptMap)
+			log.Info("getting missing transcripts", "num_missing_transcripts", len(noTransVIds))
+
+			// Paginate request to get transcripts
+			i := 0
+			pageSize := 10
+			for i < len(noTransVIds) {
+				var k int
+				if i+pageSize >= len(noTransVIds) {
+					k = len(noTransVIds)
+				} else {
+					k = i + pageSize
+				}
+
+				glog := log.WithGroup("transcript page")
+				glog.Info("getting transcripts", "start", i, "end", k, "total", len(noTransVIds))
+
+				transcriptMap, err := GetVideoTranscripts(noTransVIds[i:k])
+				i = k // Increment
+
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					glog.Error("could not get video transcripts", "error", err.Error())
+					return
+				}
+
+				err = db.UpdateVideoTranscripts(ctx, transcriptMap)
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					glog.Error("could not update video transcripts", "error", err.Error())
+					return
+				}
+				glog.Info("updated transcripts in db")
+			}
+
+			log.Info("all missing transcripts updated")
+			log.Info("updating missing video text data")
+			err = db.UpdateVideoTextData(ctx)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				glog.Error("could not update video transcripts", "error", err.Error())
+				log.Error("could not update video text data", "error", err.Error())
 				return
+
 			}
-			glog.Info("updated transcripts in db")
-		}
-
-		log.Info("all missing transcripts updated")
-		log.Info("updating missing video text data")
-		err = db.UpdateVideoTextData(ctx)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			log.Error("could not update video text data", "error", err.Error())
-			return
-
-		}
-		log.Info("missing video text data updated")
+			log.Info("missing video text data updated")
+		*/
 		w.WriteHeader(http.StatusOK)
 	})
 }
