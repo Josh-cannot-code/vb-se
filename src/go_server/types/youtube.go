@@ -39,10 +39,23 @@ type Video struct {
 	Thumbnail   string    `json:"thumbnail"`
 	ChannelID   string    `json:"channel_id"`
 	Description string    `json:"description"`
+	UploadDate  time.Time `json:"upload_date"`
+	URL         string    `json:"url"`
+	ChannelName string    `json:"channel_name"`
+	Transcript  string    `json:"transcript"`
+}
+
+type YTDLPVideo struct {
+	ID          string    `json:"id"`
+	VideoID     string    `json:"video_id"`
+	Title       string    `json:"title"`
+	Thumbnail   string    `json:"thumbnail"`
+	ChannelID   string    `json:"channel_id"`
+	Description string    `json:"description"`
 	UploadDate  YTDLPTime `json:"upload_date"`
 	URL         string    `json:"url"`
 	ChannelName string    `json:"channel_name"`
-	Transcript  string
+	Transcript  string    `json:"transcript"`
 }
 
 type VCardData struct {
@@ -50,4 +63,8 @@ type VCardData struct {
 	DescSnippet  string
 	TransSnippet string
 	Video        Video
+}
+
+func (v *VCardData) FormattedDate() string {
+	return v.Video.UploadDate.Format("Jan-02-06")
 }

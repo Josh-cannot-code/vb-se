@@ -2,17 +2,16 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"go_server/database"
 	"go_server/frontend"
 	"go_server/youtube"
 	"log/slog"
 	"os"
-	"os/exec"
 
 	"net/http"
 
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
@@ -49,25 +48,27 @@ func main() {
 	ctx := slogctx.NewCtx(context.Background(), slog.Default())
 	log := slogctx.FromCtx(ctx)
 
-
-	// Debugging db
-	ls_db_path, err := exec.Command("ls /go_server/db").Output()
+	// Elastic
+	esClient, err := elasticsearch.NewTypedClient(elasticsearch.Config{
+		Addresses: []string{
+			os.Getenv("ELASTIC_HOST"),
+		},
+		APIKey: os.Getenv("ELASTIC_API_KEY"),
+	})
 	if err != nil {
-		log.Error("could not ls", "message", err.Error())
+		log.Error("failed to connect to elastic search", "message", err.Error())
 	}
-	log.Info("ls output", "db_ls", string(ls_db_path))
 
-	sqlDb, err := sql.Open("sqlite3", os.Getenv("SQLITE_PATH"))
+	res := esClient.Info
+	// TODO: need res in loggable format
+	log.Info("Elastic Info retrieved", "elastic_info", res)
+	db := database.NewElasticConnection(esClient)
+
+	// Make sure elastic indices have been created
+	err = db.CreateIfNoIndices(ctx)
 	if err != nil {
-		log.Error("could not connect to db", "db_path", os.Getenv("SQLITE_PATH"), "message", err.Error())
-		return
+		log.Error("could not refresh indices", "message", err.Error())
 	}
-	if err = sqlDb.Ping(); err != nil {
-		log.Error("could not ping db", "db_path", os.Getenv("SQLITE_PATH"), "message", err.Error())
-		return
-	}
-	defer sqlDb.Close()
-	db := database.NewSqLiteConnection(sqlDb)
 
 	// Handler declarations
 	refreshHandler := youtube.RefreshVideos(db)
