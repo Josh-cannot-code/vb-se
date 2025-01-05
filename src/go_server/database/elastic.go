@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	internalTypes "go_server/types"
 
 	"github.com/elastic/go-elasticsearch/v8"
@@ -165,7 +166,7 @@ func (c ElasticConnection) SearchVideos(q string, sorting string) ([]internalTyp
 			},
 		}
 	}
-	//fmt.Print(sortOpts)
+	fmt.Print(sortOpts)
 	rankWindowSize := 30
 	resp, err := c.es.Search().Index("vb-se-videos").Retriever(&types.RetrieverContainer{
 		// TODO: boosting
