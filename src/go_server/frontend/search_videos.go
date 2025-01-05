@@ -53,6 +53,7 @@ func SearchVideos(db database.Repository) http.HandlerFunc {
 		if err != nil {
 			qlog.Error("could not get videos", "error", err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
+            return
 		}
 		_, err = w.Write([]byte(*videoString))
 		if err != nil {

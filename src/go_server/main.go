@@ -78,6 +78,12 @@ func main() {
 	log.Info("Elastic Info retrieved", "elastic_info", res)
 	db := database.NewElasticConnection(esClient)
 
+	// Make sure elastic indices have been created
+	err = db.CreateIfNoIndices(ctx)
+	if err != nil {
+		log.Error("could not refresh indices", "message", err.Error())
+	}
+
 	// Handler declarations
 	refreshHandler := youtube.RefreshVideos(db)
 	indexHandler := frontend.Index(db)

@@ -1,13 +1,20 @@
 {{ range .}}
 <div class="video-card">
     <img src="{{ .Video.Thumbnail }}" , alt="Thumbnail" , class="thumbnail">
-    <h4 class="video-title">
-        {{ .Video.Title }}
-    </h4>
-    <p>
-        {{ .Video.ChannelName }}
-    </p>
-    <p>
+    <div style="display: flex; flex-direction: column;">
+        <div style="display: flex; flex-direction: row; align-items: baseline;">
+            <h4 class="video-title" style="display: flex;">
+                {{ .Video.Title }}
+            </h4>
+            <h6 style="dispaly: flex; padding-left: 1rem; color: #333333; font-weight: light;">
+            {{ .FormattedDate }}
+            </h6>
+        </div>
+        <p>
+            {{ .Video.ChannelName }}
+        </p>
+    </div>
+    <p style="display: flex;">
         {{ .DescSnippet }}
     </p>
     <h5>Transcript Match:</h5>

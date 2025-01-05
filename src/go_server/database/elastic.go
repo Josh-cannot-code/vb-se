@@ -3,11 +3,13 @@ package database
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	internalTypes "go_server/types"
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/esql/query"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/sortorder"
 )
 
 type ElasticConnection struct {
@@ -29,6 +31,78 @@ func (c ElasticConnection) PutVideo(ctx context.Context, video *internalTypes.Vi
 type Channel struct {
 	ChannelName string `json:"channel_name"`
 	ChannelID   string `json:"channel_id"`
+}
+
+func (c ElasticConnection) CreateIfNoIndices(ctx context.Context) error {
+	// Create Ingest Pipeline
+	dateProcessor := &types.ProcessorContainer{
+		Set: &types.SetProcessor{
+			Field: "created_at",
+			Value: json.RawMessage(`"{{_ingest.timestamp}}"`),
+		},
+	}
+	_, err := c.es.Ingest.PutPipeline("ingest_with_dates").Processors(*dateProcessor).Do(ctx)
+	if err != nil {
+		return err
+	}
+
+	if exists, err := c.es.Indices.Exists("vb-se-videos").Do(ctx); err == nil && !exists {
+
+		fmt.Println("here")
+		mappings := types.NewTypeMapping()
+		mappings.Properties["semantic_text"] = &types.SemanticTextProperty{
+			InferenceId: ".elser-2-elasticsearch",
+			Type:        "semantic_text",
+		}
+		mappings.Properties["transcript"] = &types.TextProperty{
+			CopyTo: []string{"semantic_text"},
+		}
+		mappings.Properties["title"] = &types.TextProperty{
+			CopyTo: []string{"semantic_text"},
+		}
+		mappings.Properties["description"] = &types.TextProperty{
+			CopyTo: []string{"semantic_text"},
+		}
+		mappings.Properties["video_id"] = types.NewTextProperty()
+		mappings.Properties["channel_id"] = types.NewTextProperty()
+		mappings.Properties["thumbnail"] = types.NewTextProperty()
+		mappings.Properties["url"] = types.NewTextProperty()
+		mappings.Properties["upload_date"] = types.NewTextProperty()
+		mappings.Properties["channel_name"] = types.NewTextProperty()
+		mappings.Properties["created_at"] = types.NewDateProperty()
+
+		settings := types.NewIndexSettings()
+		ingestPipelineName := "ingest_with_dates"
+		settings.DefaultPipeline = &ingestPipelineName
+
+		_, err := c.es.Indices.Create("vb-se-videos").Settings(settings).Mappings(mappings).Do(ctx)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	if exists, err := c.es.Indices.Exists("vb-se-channels").Do(ctx); err == nil && !exists {
+
+		mappings := types.NewTypeMapping()
+		mappings.Properties["channel_id"] = types.NewTextProperty()
+		mappings.Properties["channel_name"] = types.NewTextProperty()
+		mappings.Properties["created_at"] = types.NewDateProperty()
+
+		settings := types.NewIndexSettings()
+		ingestPipelineName := "ingest_with_dates"
+		settings.DefaultPipeline = &ingestPipelineName
+
+		_, err := c.es.Indices.Create("vb-se-channels").Settings(settings).Mappings(mappings).Do(ctx)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c ElasticConnection) GetNoTranscriptVideoIds(ctx context.Context) ([]string, error) {
@@ -70,10 +144,36 @@ func (c ElasticConnection) GetVideoIds(ctx context.Context, channelId string) ([
 	return videoIds, nil
 }
 
-func (c ElasticConnection) SearchVideos(q string) ([]internalTypes.VCardData, error) {
+func (c ElasticConnection) SearchVideos(q string, sorting string) ([]internalTypes.VCardData, error) {
+	// TODO construct sort here and pass in the sort dir
+	var sortOpts map[string]types.FieldSort
+	switch sorting {
+	case "relevece":
+		sortOpts = map[string]types.FieldSort{
+			"_score": {
+				Order: &sortorder.Desc,
+			},
+		}
+	case "oldest":
+		sortOpts = map[string]types.FieldSort{
+			"upload_date": {
+				Order: &sortorder.Asc,
+			},
+		}
+	case "newest":
+		sortOpts = map[string]types.FieldSort{
+			"upload_date": {
+				Order: &sortorder.Desc,
+			},
+		}
+	}
+	fmt.Print(sortOpts)
+	rankWindowSize := 30
 	resp, err := c.es.Search().Index("vb-se-videos").Retriever(&types.RetrieverContainer{
 		// TODO: boosting
+		// TODO: the sorting here HAS to be wrong since we are doing it pre rrf
 		Rrf: &types.RRFRetriever{
+			RankWindowSize: &rankWindowSize,
 			Retrievers: []types.RetrieverContainer{
 				{
 					Standard: &types.StandardRetriever{
@@ -101,7 +201,8 @@ func (c ElasticConnection) SearchVideos(q string) ([]internalTypes.VCardData, er
 				},
 			},
 		},
-	}).Do(context.Background())
+	}).From(0).Size(rankWindowSize).
+		Do(context.Background())
 	if err != nil {
 		return nil, err
 	}

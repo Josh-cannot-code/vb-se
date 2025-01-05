@@ -64,3 +64,7 @@ type VCardData struct {
 	TransSnippet string
 	Video        Video
 }
+
+func (v *VCardData) FormattedDate() string {
+	return v.Video.UploadDate.Format("Jan-02-06")
+}
