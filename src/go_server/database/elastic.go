@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	internalTypes "go_server/types"
 
 	"github.com/elastic/go-elasticsearch/v8"
@@ -48,7 +47,6 @@ func (c ElasticConnection) CreateIfNoIndices(ctx context.Context) error {
 
 	if exists, err := c.es.Indices.Exists("vb-se-videos").Do(ctx); err == nil && !exists {
 
-		fmt.Println("here")
 		mappings := types.NewTypeMapping()
 		mappings.Properties["semantic_text"] = &types.SemanticTextProperty{
 			InferenceId: ".elser-2-elasticsearch",
@@ -167,7 +165,7 @@ func (c ElasticConnection) SearchVideos(q string, sorting string) ([]internalTyp
 			},
 		}
 	}
-	fmt.Print(sortOpts)
+	//fmt.Print(sortOpts)
 	rankWindowSize := 30
 	resp, err := c.es.Search().Index("vb-se-videos").Retriever(&types.RetrieverContainer{
 		// TODO: boosting

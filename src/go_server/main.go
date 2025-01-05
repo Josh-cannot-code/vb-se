@@ -48,29 +48,15 @@ func main() {
 	ctx := slogctx.NewCtx(context.Background(), slog.Default())
 	log := slogctx.FromCtx(ctx)
 
-	/*
-		sqlDb, err := sql.Open("sqlite3", os.Getenv("SQLITE_PATH"))
-		if err != nil {
-			log.Error("could not connect to db", "db_path", os.Getenv("SQLITE_PATH"), "message", err.Error())
-			return
-		}
-		if err = sqlDb.Ping(); err != nil {
-			log.Error("could not ping db", "db_path", os.Getenv("SQLITE_PATH"), "message", err.Error())
-			return
-		}
-		defer sqlDb.Close()
-		db := database.NewSqLiteConnection(sqlDb)
-	*/
-
 	// Elastic
 	esClient, err := elasticsearch.NewTypedClient(elasticsearch.Config{
 		Addresses: []string{
-			"http://localhost:9200",
+			os.Getenv("ELASTIC_HOST"),
 		},
-		APIKey: "OFN2Mno1TUJDejVTWHlHeGlyM2w6LTExemZTQ2xRbE9MVEtYT1kzTjc4UQ==",
+		APIKey: os.Getenv("ELASTIC_API_KEY"),
 	})
 	if err != nil {
-		log.Error("failed to connect to elasticstack", "message", err.Error())
+		log.Error("failed to connect to elastic search", "message", err.Error())
 	}
 
 	res := esClient.Info
