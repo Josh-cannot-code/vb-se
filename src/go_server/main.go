@@ -49,6 +49,7 @@ func main() {
 	log := slogctx.FromCtx(ctx)
 
 	// Elastic
+	log.Info("elastic host", "value", os.Getenv("ELASTIC_HOST"))
 	esClient, err := elasticsearch.NewTypedClient(elasticsearch.Config{
 		Addresses: []string{
 			os.Getenv("ELASTIC_HOST"),
