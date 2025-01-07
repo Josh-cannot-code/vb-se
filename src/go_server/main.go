@@ -50,12 +50,24 @@ func main() {
 
 	// Elastic
 	log.Info("elastic host", "value", os.Getenv("ELASTIC_HOST"))
-	esClient, err := elasticsearch.NewTypedClient(elasticsearch.Config{
-		Addresses: []string{
-			os.Getenv("ELASTIC_HOST"),
-		},
-		APIKey: os.Getenv("ELASTIC_API_KEY"),
-	})
+
+	var esClient *elasticsearch.TypedClient
+	if os.Getenv("ENVIRONMENT") == "prod" {
+		esClient, err = elasticsearch.NewTypedClient(elasticsearch.Config{
+			Addresses: []string{
+				os.Getenv("ELASTIC_HOST"),
+			},
+			APIKey: os.Getenv("ELASTIC_API_KEY"),
+			CACert: []byte(os.Getenv("ELASTIC_CA_CERT")),
+		})
+	} else {
+		esClient, err = elasticsearch.NewTypedClient(elasticsearch.Config{
+			Addresses: []string{
+				os.Getenv("ELASTIC_HOST"),
+			},
+			APIKey: os.Getenv("ELASTIC_API_KEY"),
+		})
+	}
 	if err != nil {
 		log.Error("failed to connect to elastic search", "message", err.Error())
 	}
