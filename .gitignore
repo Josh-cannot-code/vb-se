@@ -4,3 +4,4 @@
 src/db/vb-se.db
 src/go_server/tmp
 src/go_server/.air.toml
+src/go_server/go_server

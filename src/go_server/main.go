@@ -2,18 +2,18 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"go_server/database"
 	"go_server/frontend"
 	"go_server/youtube"
 	"log/slog"
+	"net/http"
 	"os"
 
-	"net/http"
-
-	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/opensearch-project/opensearch-go"
 	_ "github.com/mattn/go-sqlite3"
 	slogctx "github.com/veqryn/slog-context"
 )
@@ -48,34 +48,45 @@ func main() {
 	ctx := slogctx.NewCtx(context.Background(), slog.Default())
 	log := slogctx.FromCtx(ctx)
 
-	// Elastic
-	log.Info("elastic host", "value", os.Getenv("ELASTIC_HOST"))
+	// OpenSearch
+	log.Info("opensearch host", "value", os.Getenv("OPENSEARCH_HOST"))
 
-	var esClient *elasticsearch.TypedClient
+	var osConfig opensearch.Config
 	if os.Getenv("ENVIRONMENT") == "prod" {
-		esClient, err = elasticsearch.NewTypedClient(elasticsearch.Config{
-			Addresses: []string{
-				os.Getenv("ELASTIC_HOST"),
+		osConfig = opensearch.Config{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: false,
+				},
 			},
-			APIKey: os.Getenv("ELASTIC_API_KEY"),
-			CACert: []byte(os.Getenv("ELASTIC_CA_CERT")),
-		})
+			Addresses: []string{
+				os.Getenv("OPENSEARCH_HOST"),
+			},
+			Username: os.Getenv("OPENSEARCH_USERNAME"),
+			Password: os.Getenv("OPENSEARCH_PASSWORD"),
+		}
 	} else {
-		esClient, err = elasticsearch.NewTypedClient(elasticsearch.Config{
-			Addresses: []string{
-				os.Getenv("ELASTIC_HOST"),
+		osConfig = opensearch.Config{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
 			},
-			APIKey: os.Getenv("ELASTIC_API_KEY"),
-		})
-	}
-	if err != nil {
-		log.Error("failed to connect to elastic search", "message", err.Error())
+			Addresses: []string{
+				os.Getenv("OPENSEARCH_HOST"),
+			},
+			Username: os.Getenv("OPENSEARCH_USERNAME"),
+			Password: os.Getenv("OPENSEARCH_PASSWORD"),
+		}
 	}
 
-	res := esClient.Info
-	// TODO: need res in loggable format
-	log.Info("Elastic Info retrieved", "elastic_info", res)
-	db := database.NewElasticConnection(esClient)
+	osClient, err := opensearch.NewClient(osConfig)
+	if err != nil {
+		log.Error("failed to connect to opensearch", "message", err.Error())
+	}
+
+	db := database.NewOpenSearchConnection(osClient)
+	log.Info("OpenSearch connection established")
 
 	// Make sure elastic indices have been created
 	err = db.CreateIfNoIndices(ctx)
