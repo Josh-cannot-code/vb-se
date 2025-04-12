@@ -7,7 +7,7 @@ curl -XPUT "http://localhost:9200/vb-se-videos" -H 'Content-Type: application/js
   "mappings": {
     "properties": {
       "video_id": {
-        "type": "text"
+        "type": "keyword"
       },
       "title": {
         "type": "text"
@@ -16,7 +16,7 @@ curl -XPUT "http://localhost:9200/vb-se-videos" -H 'Content-Type: application/js
         "type": "text"
       },
       "channel_id": {
-        "type": "text"
+        "type": "keyword"
       },
       "channel_name": {
         "type": "text"

@@ -2,25 +2,57 @@ package database
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	internalTypes "go_server/types"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/opensearch-project/opensearch-go"
 	"github.com/opensearch-project/opensearch-go/opensearchapi"
+	slogctx "github.com/veqryn/slog-context"
 )
 
 type OpenSearchConnection struct {
 	osc *opensearch.Client
 }
 
-func NewOpenSearchConnection(osc *opensearch.Client) *OpenSearchConnection {
-	return &OpenSearchConnection{
-		osc: osc,
+func NewOpenSearchConnection() (*OpenSearchConnection, error) {
+	// Create OpenSearch client with authentication
+	cfg := opensearch.Config{
+		Addresses: []string{os.Getenv("OPENSEARCH_HOST")},
+		Username:  os.Getenv("OPENSEARCH_USERNAME"),
+		Password:  os.Getenv("OPENSEARCH_PASSWORD"),
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
 	}
+
+	client, err := opensearch.NewClient(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create OpenSearch client: %w", err)
+	}
+
+	resp, err := client.Ping()
+	if err != nil {
+		return nil, fmt.Errorf("failed to ping OpenSearch: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read and print response body
+	_, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read ping response: %w", err)
+	}
+
+	return &OpenSearchConnection{
+		osc: client,
+	}, nil
 }
 
 func (c OpenSearchConnection) PutVideo(ctx context.Context, video *internalTypes.Video) error {
@@ -48,6 +80,7 @@ func (c OpenSearchConnection) PutVideo(ctx context.Context, video *internalTypes
 	return nil
 }
 
+/*
 func (c OpenSearchConnection) CreateIfNoIndices(ctx context.Context) error {
 	// First create the ingest pipeline
 	pipeline := strings.NewReader(`{
@@ -179,6 +212,7 @@ func (c OpenSearchConnection) CreateIfNoIndices(ctx context.Context) error {
 
 	return nil
 }
+*/
 
 func (c OpenSearchConnection) GetNoTranscriptVideoIds(ctx context.Context) ([]string, error) {
 	// TODO: Implement OpenSearch version
@@ -201,7 +235,7 @@ func (c OpenSearchConnection) GetChannelIds(ctx context.Context) ([]string, erro
 		"query": {
 			"match_all": {}
 		},
-		"_source": ["id"]
+		"_source": ["channel_id"]
 	}`)
 
 	searchReq := opensearchapi.SearchRequest{
@@ -224,7 +258,7 @@ func (c OpenSearchConnection) GetChannelIds(ctx context.Context) ([]string, erro
 		Hits struct {
 			Hits []struct {
 				Source struct {
-					ChannelID string `json:"id"`
+					ChannelID string `json:"channel_id"`
 				} `json:"_source"`
 			} `json:"hits"`
 		} `json:"hits"`
@@ -244,8 +278,62 @@ func (c OpenSearchConnection) GetChannelIds(ctx context.Context) ([]string, erro
 }
 
 func (c OpenSearchConnection) GetVideoIds(ctx context.Context, channelId string) ([]string, error) {
-	// TODO: Implement OpenSearch version
-	return nil, nil
+	// Create search query for videos by channel ID
+	searchBody := strings.NewReader(fmt.Sprintf(`{
+		"query": {
+			"term": {
+				"channel_id": "%s"
+			}
+		},
+		"_source": ["video_id"]
+	}`, channelId))
+
+	// Create search request
+	searchReq := opensearchapi.SearchRequest{
+		Index: []string{"vb-se-videos"},
+		Body:  searchBody,
+	}
+
+	// Execute search
+	res, err := searchReq.Do(ctx, c.osc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute search: %w", err)
+	}
+	defer res.Body.Close()
+
+	// Check for errors in response
+	if res.IsError() {
+		return nil, fmt.Errorf("search request failed: %s", res.String())
+	}
+
+	// Parse response
+	var searchResponse struct {
+		Hits struct {
+			Hits []struct {
+				Source struct {
+					VideoID string `json:"video_id"`
+				} `json:"_source"`
+			} `json:"hits"`
+		} `json:"hits"`
+	}
+
+	if err := json.NewDecoder(res.Body).Decode(&searchResponse); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	// Extract video IDs
+	videoIds := make([]string, 0, len(searchResponse.Hits.Hits))
+	for _, hit := range searchResponse.Hits.Hits {
+		videoIds = append(videoIds, hit.Source.VideoID)
+	}
+
+	// Get logger
+	ctx = slogctx.With(ctx, "function", "GetVideoIds")
+	log := slogctx.FromCtx(ctx)
+
+	log.Info("GetVideoIds", "channelId", channelId, "numVideosInDb", len(videoIds))
+
+	return videoIds, nil
 }
 
 func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]internalTypes.VCardData, error) {
@@ -266,6 +354,8 @@ func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]internal
 		sortField = "_score"
 		sortOrder = "desc"
 	}
+
+	modelId := os.Getenv("OPENSEARCH_MODEL_ID")
 
 	// Construct the search query
 	searchBody := strings.NewReader(fmt.Sprintf(`{
@@ -292,7 +382,7 @@ func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]internal
 						"neural": {
 							"transcript_embedding": {
 								"query_text": "%s",
-								"model_id": "htl9J5YBSRn9YxV6dz9N",
+								"model_id": "%s",
 								"k": 5
 							}
 						}
@@ -301,7 +391,7 @@ func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]internal
 						"neural": {
 							"description_embedding": {
 								"query_text": "%s",
-								"model_id": "htl9J5YBSRn9YxV6dz9N",
+								"model_id": "%s",
 								"k": 5
 							}
 						}
@@ -310,7 +400,7 @@ func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]internal
 						"neural": {
 							"title_embedding": {
 								"query_text": "%s",
-								"model_id": "htl9J5YBSRn9YxV6dz9N",
+								"model_id": "%s",
 								"k": 5
 							}
 						}
@@ -336,19 +426,29 @@ func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]internal
 				}
 			]
 		}
-	}`, sortField, sortOrder, q, q, q, q))
+	}`, sortField, sortOrder, q, q, modelId, q, modelId, q, modelId))
 
 	// Create HTTP request
-	req, err := http.NewRequest("GET", "http://localhost:9200/vb-se-videos/_search", searchBody)
+	searchUrl := fmt.Sprintf("%s/vb-se-videos/_search", os.Getenv("OPENSEARCH_HOST"))
+	req, err := http.NewRequest("GET", searchUrl, searchBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Add headers
+	// Add headers and auth
 	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(os.Getenv("OPENSEARCH_USERNAME"), os.Getenv("OPENSEARCH_PASSWORD"))
+
+	// Create insecure http client to make search request
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
 
 	// Execute request
-	httpClient := &http.Client{}
 	res, err := httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search videos: %w", err)

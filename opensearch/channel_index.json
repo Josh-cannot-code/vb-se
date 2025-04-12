@@ -1,0 +1,19 @@
+PUT /vb-se-channels
+{
+    "mappings": {
+        "properties": {
+            "channel_id": {
+                "type": "text"
+            },
+            "channel_name": {
+                "type": "text"
+            },
+            "created_at": {
+                "type": "date"
+            }
+        }
+    },
+    "settings": {
+        "default_pipeline": "ingest_with_dates"
+    }
+}

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: vb-se-config
+  namespace: vb-se
+data:
+  opensearch_host: "vb-se.svc.cluster.local.opensearch-cluster-master"
+  opensearch_port: "9200"
+  opensearch_username: "admin"
+  opensearch_password: "Re3alB@adman"
+  opensearch_model_id: "jeIuL5YBBp-fY1xR_VsF"

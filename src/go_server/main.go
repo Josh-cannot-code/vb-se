@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"go_server/database"
 	"go_server/frontend"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"github.com/opensearch-project/opensearch-go"
 	_ "github.com/mattn/go-sqlite3"
 	slogctx "github.com/veqryn/slog-context"
 )
@@ -51,48 +49,18 @@ func main() {
 	// OpenSearch
 	log.Info("opensearch host", "value", os.Getenv("OPENSEARCH_HOST"))
 
-	var osConfig opensearch.Config
-	if os.Getenv("ENVIRONMENT") == "prod" {
-		osConfig = opensearch.Config{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: false,
-				},
-			},
-			Addresses: []string{
-				os.Getenv("OPENSEARCH_HOST"),
-			},
-			Username: os.Getenv("OPENSEARCH_USERNAME"),
-			Password: os.Getenv("OPENSEARCH_PASSWORD"),
-		}
-	} else {
-		osConfig = opensearch.Config{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-			Addresses: []string{
-				os.Getenv("OPENSEARCH_HOST"),
-			},
-			Username: os.Getenv("OPENSEARCH_USERNAME"),
-			Password: os.Getenv("OPENSEARCH_PASSWORD"),
-		}
-	}
-
-	osClient, err := opensearch.NewClient(osConfig)
+	db, err := database.NewOpenSearchConnection()
 	if err != nil {
 		log.Error("failed to connect to opensearch", "message", err.Error())
+		return
 	}
-
-	db := database.NewOpenSearchConnection(osClient)
 	log.Info("OpenSearch connection established")
 
 	// Make sure elastic indices have been created
-	err = db.CreateIfNoIndices(ctx)
-	if err != nil {
-		log.Error("could not refresh indices", "message", err.Error())
-	}
+	// err = db.CreateIfNoIndices(ctx)
+	// if err != nil {
+	// 	log.Error("could not refresh indices", "message", err.Error())
+	// }
 
 	// Handler declarations
 	refreshHandler := youtube.RefreshVideos(db)
