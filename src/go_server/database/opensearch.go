@@ -165,10 +165,13 @@ func (c OpenSearchConnection) GetVideoIds(ctx context.Context, channelId string)
 		"_source": ["video_id"]
 	}`, channelId))
 
+	searchSize := 10000
+
 	// Create search request
 	searchReq := opensearchapi.SearchRequest{
 		Index: []string{"vb-se-videos"},
 		Body:  searchBody,
+		Size:  &searchSize,
 	}
 
 	// Execute search
