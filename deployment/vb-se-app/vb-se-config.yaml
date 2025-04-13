@@ -5,7 +5,7 @@ metadata:
   name: vb-se-config
   namespace: vb-se
 data:
-  opensearch_host: "https://opensearch-cluster-master.vb-se.svc.cluster.local:9200"
+  opensearch_host: "https://opensearch-cluster-master.default.svc.cluster.local:9200"
   opensearch_port: "9200"
   opensearch_username: "admin"
   opensearch_password: "Re3alB@adman"
