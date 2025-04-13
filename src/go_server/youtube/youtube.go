@@ -133,13 +133,13 @@ func GetVideoTranscript(videoId string) (string, error) {
 
 	// Get transcripts
 	// TODO: quirk calling script
-	cmd := exec.Command(path, "python_scripts/get_transcripts.py", videoId)
+	cmd := exec.Command(path, "python_scripts/get_transcripts.py", "'"+videoId+"'")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
-		return "", fmt.Errorf("arg: %s, stderr: %s, err: %w", videoId, string(stderr.Bytes()), err)
+		return "", fmt.Errorf("arg: %s, stderr: %s, err: %w", videoId, stderr.String(), err)
 	}
 
 	transcriptMap := make(map[string]string)
@@ -239,6 +239,7 @@ func RefreshVideos(db database.Repository) http.HandlerFunc {
 				transcript, err := GetVideoTranscript(vId)
 				if err != nil {
 					vlog.Error("could not get video transcript with transcript api", "error", err.Error())
+					continue
 				}
 				video.Transcript = transcript
 

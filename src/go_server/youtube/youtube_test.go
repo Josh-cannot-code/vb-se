@@ -71,3 +71,17 @@ func TestGetVideoTranscripts(t *testing.T) {
 		t.Fatalf(`got: %s, expected %s`, value, expected)
 	}
 }
+
+func TestGetVideoTranscriptsNegative(t *testing.T) {
+	videoIds := []string{"-NI6lxgHaN8"}
+	transcript, err := GetVideoTranscript(videoIds[0])
+	if err != nil {
+		t.Fatalf("error getting video transcripts: %s", err.Error())
+	}
+	value := strings.TrimSpace(transcript)[:10]
+	expected := "good morni"
+
+	if value != expected {
+		t.Fatalf(`got: %s, expected %s`, value, expected)
+	}
+}
