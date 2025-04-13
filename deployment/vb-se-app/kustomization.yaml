@@ -4,3 +4,4 @@ resources:
   - ./deployment.yaml
   - ./sealed-regcred.json
   - ./vb-se-config.yaml
+  - ./youtube-api-key-sealed.json
