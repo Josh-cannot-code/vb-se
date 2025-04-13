@@ -26,6 +26,10 @@ func GetVideosHTML(db database.Repository, query string, sorting string) (*strin
 		return &s, nil
 	} else {
 		var vsb strings.Builder
+		for _, video := range videos {
+			descLength := min(300, len(video.Video.Description))
+			video.DescSnippet = video.Video.Description[:descLength]
+		}
 		err = htmlTemplate.Execute(&vsb, videos)
 		if err != nil {
 			return nil, err
@@ -53,7 +57,7 @@ func SearchVideos(db database.Repository) http.HandlerFunc {
 		if err != nil {
 			qlog.Error("could not get videos", "error", err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
-            return
+			return
 		}
 		_, err = w.Write([]byte(*videoString))
 		if err != nil {

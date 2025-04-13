@@ -17,7 +17,7 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-func GetVideoIds(ctx context.Context, channelId string) ([]string, error) {
+func GetVideoIds(ctx context.Context, channelId string) ([]*string, error) {
 	// Get api key
 	ytApiKey := os.Getenv("YOUTUBE_API_KEY")
 
@@ -37,7 +37,7 @@ func GetVideoIds(ctx context.Context, channelId string) ([]string, error) {
 	playlstId := channelResp.Items[0].ContentDetails.RelatedPlaylists.Uploads
 
 	// Get all videos from channel
-	var videoIds []string
+	var videoIds []*string
 	nextPageToken := ""
 	for {
 		playlistCall := service.PlaylistItems.List(part)
@@ -54,7 +54,7 @@ func GetVideoIds(ctx context.Context, channelId string) ([]string, error) {
 
 		// Save video ids
 		for _, item := range playlistResp.Items {
-			videoIds = append(videoIds, item.ContentDetails.VideoId)
+			videoIds = append(videoIds, &item.ContentDetails.VideoId)
 		}
 
 		nextPageToken = playlistResp.NextPageToken
@@ -105,21 +105,21 @@ func GetVideo(videoId string) (*types.Video, error) {
 
 // Get all elements in a that do not appear in b
 // len(a) >= len(b)
-func inAnotInB(a []string, b []string) []string {
+func inAnotInB(a []*string, b []*string) []*string {
 	diff := make(map[string]bool, len(a))
 
 	for _, e := range a {
-		diff[e] = true
+		diff[*e] = true
 	}
 
 	for _, e := range b {
-		diff[e] = false
+		diff[*e] = false
 	}
 
-	var result []string
+	var result []*string
 	for k, v := range diff {
 		if v {
-			result = append(result, k)
+			result = append(result, &k)
 		}
 	}
 	return result
@@ -132,7 +132,6 @@ func GetVideoTranscript(videoId string) (string, error) {
 	}
 
 	// Get transcripts
-	// TODO: quirk calling script
 	cmd := exec.Command(path, "python_scripts/get_transcripts.py", "'"+videoId+"'")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -203,7 +202,7 @@ func RefreshVideos(db database.Repository) http.HandlerFunc {
 			clog := log.With("channel_id", channelId)
 			clog.Info("getting videos for channel")
 
-			storedVideoIds, err := db.GetVideoIds(ctx, channelId)
+			storedVideoIds, err := db.GetVideoIds(ctx, *channelId)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				clog = log.With("error", err.Error())
@@ -211,7 +210,7 @@ func RefreshVideos(db database.Repository) http.HandlerFunc {
 				return
 			}
 
-			allVideoIds, err := GetVideoIds(ctx, channelId)
+			allVideoIds, err := GetVideoIds(ctx, *channelId)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				clog = log.With("error", err.Error())
@@ -224,7 +223,7 @@ func RefreshVideos(db database.Repository) http.HandlerFunc {
 
 			for _, vId := range videosToGet {
 				vlog := clog.With("video_id", vId)
-				video, err := GetVideo(vId)
+				video, err := GetVideo(*vId)
 				if err != nil {
 					vlog.Error("could not get video with yt_dlp", "error", err.Error())
 					continue
@@ -232,11 +231,11 @@ func RefreshVideos(db database.Repository) http.HandlerFunc {
 				if video == nil {
 					vlog.Warn("video likely does not exist")
 					video = &types.Video{
-						ID: vId,
+						ID: *vId,
 					}
 				}
 
-				transcript, err := GetVideoTranscript(vId)
+				transcript, err := GetVideoTranscript(*vId)
 				if err != nil {
 					vlog.Error("could not get video transcript with transcript api", "error", err.Error())
 					continue

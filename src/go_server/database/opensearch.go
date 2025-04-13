@@ -89,7 +89,7 @@ func (c OpenSearchConnection) PutVideo(ctx context.Context, video *internalTypes
 	return nil
 }
 
-func (c OpenSearchConnection) GetNoTranscriptVideoIds(ctx context.Context) ([]string, error) {
+func (c OpenSearchConnection) GetNoTranscriptVideoIds(ctx context.Context) ([]*string, error) {
 	// TODO: Implement OpenSearch version
 	return nil, nil
 }
@@ -104,7 +104,7 @@ func (c OpenSearchConnection) UpdateVideoTextData(ctx context.Context) error {
 	return nil
 }
 
-func (c OpenSearchConnection) GetChannelIds(ctx context.Context) ([]string, error) {
+func (c OpenSearchConnection) GetChannelIds(ctx context.Context) ([]*string, error) {
 	// Create search request to get all channels
 	searchBody := strings.NewReader(`{
 		"query": {
@@ -144,15 +144,15 @@ func (c OpenSearchConnection) GetChannelIds(ctx context.Context) ([]string, erro
 	}
 
 	// Extract channel IDs
-	channelIds := make([]string, 0, len(searchResponse.Hits.Hits))
+	channelIds := make([]*string, 0, len(searchResponse.Hits.Hits))
 	for _, hit := range searchResponse.Hits.Hits {
-		channelIds = append(channelIds, hit.Source.ChannelID)
+		channelIds = append(channelIds, &hit.Source.ChannelID)
 	}
 
 	return channelIds, nil
 }
 
-func (c OpenSearchConnection) GetVideoIds(ctx context.Context, channelId string) ([]string, error) {
+func (c OpenSearchConnection) GetVideoIds(ctx context.Context, channelId string) ([]*string, error) {
 	// Create search query for videos by channel ID
 	searchBody := strings.NewReader(fmt.Sprintf(`{
 		"query": {
@@ -202,9 +202,9 @@ func (c OpenSearchConnection) GetVideoIds(ctx context.Context, channelId string)
 	}
 
 	// Extract video IDs
-	videoIds := make([]string, 0, len(searchResponse.Hits.Hits))
+	videoIds := make([]*string, 0, len(searchResponse.Hits.Hits))
 	for _, hit := range searchResponse.Hits.Hits {
-		videoIds = append(videoIds, hit.Source.VideoID)
+		videoIds = append(videoIds, &hit.Source.VideoID)
 	}
 
 	// Get logger
@@ -216,7 +216,7 @@ func (c OpenSearchConnection) GetVideoIds(ctx context.Context, channelId string)
 	return videoIds, nil
 }
 
-func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]internalTypes.VCardData, error) {
+func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]*internalTypes.VCardData, error) {
 	var sortField string
 	var sortOrder string
 
@@ -354,9 +354,9 @@ func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]internal
 	}
 
 	// Convert to VCardData
-	vCards := make([]internalTypes.VCardData, 0, len(searchResponse.Hits.Hits))
+	vCards := make([]*internalTypes.VCardData, 0, len(searchResponse.Hits.Hits))
 	for _, hit := range searchResponse.Hits.Hits {
-		vCards = append(vCards, internalTypes.VCardData{
+		vCards = append(vCards, &internalTypes.VCardData{
 			Video: hit.Source,
 		})
 	}

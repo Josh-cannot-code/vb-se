@@ -6,6 +6,7 @@
             <h4 class="video-title" style="display: flex;">
                 {{ .Video.Title }}
             </h4>
+            <br/>
             <h6 style="dispaly: flex; padding-left: 1rem; color: #333333; font-weight: light;">
             {{ .FormattedDate }}
             </h6>
@@ -16,10 +17,6 @@
     </div>
     <p style="display: flex;">
         {{ .DescSnippet }}
-    </p>
-    <h5>Transcript Match:</h5>
-    <p>
-        {{ .TransSnippet }}
     </p>
 </div>
 {{ end }}
