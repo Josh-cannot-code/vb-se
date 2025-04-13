@@ -5,3 +5,4 @@ resources:
   - ./sealed-regcred.json
   - ./vb-se-config.yaml
   - ./youtube-api-key-sealed.json
+  - ./tunnel-credentials-sealed.json
