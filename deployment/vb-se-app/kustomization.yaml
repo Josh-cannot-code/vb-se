@@ -6,3 +6,4 @@ resources:
   - ./vb-se-config.yaml
   - ./youtube-api-key-sealed.json
   - ./tunnel-credentials-sealed.json
+  - ./cloudflare-config.yaml
