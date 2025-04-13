@@ -1,0 +1,5 @@
+POST /vb-se-channels/_doc
+{
+  "channel_id": "UCGaVdbSav8xWuFWTadK6loA",
+  "channel_name": "vlogbrothers"
+}

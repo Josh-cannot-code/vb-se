@@ -1,0 +1,17 @@
+curl -XPUT "http://localhost:9200/_ingest/pipeline/video-ingest-pipeline" -H 'Content-Type: application/json' -d'
+{
+  "description": "video transcript embedding pipeline",
+  "processors": [
+    {
+      "text_embedding": {
+        "model_id": "htl9J5YBSRn9YxV6dz9N",
+        "field_map": {
+          "title": "title_embedding",
+          "description": "description_embedding",
+          "transcript": "transcript_embedding"
+        }
+      }
+    }
+  ]
+}
+'

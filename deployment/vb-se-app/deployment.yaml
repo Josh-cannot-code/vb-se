@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vb-se-deployment
+  namespace: vb-se
+  labels:
+    app: vb-se
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vb-se
+  template:
+    metadata:
+      labels:
+        app: vb-se
+    spec:
+      containers:
+      - name: vb-se
+        image: ghcr.io/josh-cannot-code/docker-vb-se:latest
+        imagePullPolicy: Always
+        env:
+        - name: YOUTUBE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: youtube-api-key
+              key: api-key
+        - name: ENVIRONMENT
+          value: "prod"
+        - name: OPENSEARCH_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: vb-se-config
+              key: opensearch_host
+        - name: OPENSEARCH_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: vb-se-config
+              key: opensearch_port
+        - name: OPENSEARCH_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: vb-se-config
+              key: opensearch_username
+        - name: OPENSEARCH_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: vb-se-config
+              key: opensearch_password
+        - name: OPENSEARCH_MODEL_ID
+          valueFrom:
+            configMapKeyRef:
+              name: vb-se-config
+              key: opensearch_model_id
+        ports:
+        - containerPort: 3002
+          name: vb-se-port
+      imagePullSecrets:
+      - name: regcred

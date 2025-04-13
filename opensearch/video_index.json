@@ -1,0 +1,69 @@
+curl -XPUT "http://localhost:9200/vb-se-videos" -H 'Content-Type: application/json' -d'
+{
+  "settings": {
+    "index.knn": true,
+    "default_pipeline": "video-ingest-pipeline"
+  },
+  "mappings": {
+    "properties": {
+      "video_id": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text"
+      },
+      "thumbnail": {
+        "type": "text"
+      },
+      "channel_id": {
+        "type": "keyword"
+      },
+      "channel_name": {
+        "type": "text"
+      },
+      "description": {
+        "type": "text"
+      },
+      "upload_date": {
+        "type": "date"
+      },
+      "url": {
+        "type": "text"
+      },
+      "transcript": {
+        "type": "text"
+      },    
+      "title_embedding": {
+        "type": "knn_vector",
+        "dimension": 768,
+        "method": {
+          "engine": "lucene",
+          "space_type": "l2",
+          "name": "hnsw",
+          "parameters": {}
+        }
+      },
+      "transcript_embedding": {
+        "type": "knn_vector",
+        "dimension": 768,
+        "method": {
+          "engine": "lucene",
+          "space_type": "l2",
+          "name": "hnsw",
+          "parameters": {}
+        }
+      },
+      "description_embedding": {
+        "type": "knn_vector",
+        "dimension": 768,
+        "method": {
+          "engine": "lucene",
+          "space_type": "l2",
+          "name": "hnsw",
+          "parameters": {}
+        }
+      }
+    }
+  }
+}
+'

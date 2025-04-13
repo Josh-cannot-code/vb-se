@@ -7,11 +7,9 @@ import (
 	"go_server/frontend"
 	"go_server/youtube"
 	"log/slog"
+	"net/http"
 	"os"
 
-	"net/http"
-
-	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
@@ -48,40 +46,21 @@ func main() {
 	ctx := slogctx.NewCtx(context.Background(), slog.Default())
 	log := slogctx.FromCtx(ctx)
 
-	// Elastic
-	log.Info("elastic host", "value", os.Getenv("ELASTIC_HOST"))
+	// OpenSearch
+	log.Info("opensearch host", "value", os.Getenv("OPENSEARCH_HOST"))
 
-	var esClient *elasticsearch.TypedClient
-	if os.Getenv("ENVIRONMENT") == "prod" {
-		esClient, err = elasticsearch.NewTypedClient(elasticsearch.Config{
-			Addresses: []string{
-				os.Getenv("ELASTIC_HOST"),
-			},
-			APIKey: os.Getenv("ELASTIC_API_KEY"),
-			CACert: []byte(os.Getenv("ELASTIC_CA_CERT")),
-		})
-	} else {
-		esClient, err = elasticsearch.NewTypedClient(elasticsearch.Config{
-			Addresses: []string{
-				os.Getenv("ELASTIC_HOST"),
-			},
-			APIKey: os.Getenv("ELASTIC_API_KEY"),
-		})
-	}
+	db, err := database.NewOpenSearchConnection()
 	if err != nil {
-		log.Error("failed to connect to elastic search", "message", err.Error())
+		log.Error("failed to connect to opensearch", "message", err.Error())
+		return
 	}
-
-	res := esClient.Info
-	// TODO: need res in loggable format
-	log.Info("Elastic Info retrieved", "elastic_info", res)
-	db := database.NewElasticConnection(esClient)
+	log.Info("OpenSearch connection established")
 
 	// Make sure elastic indices have been created
-	err = db.CreateIfNoIndices(ctx)
-	if err != nil {
-		log.Error("could not refresh indices", "message", err.Error())
-	}
+	// err = db.CreateIfNoIndices(ctx)
+	// if err != nil {
+	// 	log.Error("could not refresh indices", "message", err.Error())
+	// }
 
 	// Handler declarations
 	refreshHandler := youtube.RefreshVideos(db)
