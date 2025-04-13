@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: cloudflared
-  namespace: psa
+  namespace: vb-se
 data:
   config.yaml: |
     # Name of the tunnel you want to run
