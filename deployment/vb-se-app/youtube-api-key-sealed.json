@@ -1,0 +1,21 @@
+{
+  "kind": "SealedSecret",
+  "apiVersion": "bitnami.com/v1alpha1",
+  "metadata": {
+    "name": "youtube-api-key",
+    "namespace": "vb-se",
+    "creationTimestamp": null
+  },
+  "spec": {
+    "template": {
+      "metadata": {
+        "name": "youtube-api-key",
+        "namespace": "vb-se",
+        "creationTimestamp": null
+      }
+    },
+    "encryptedData": {
+      "api-key": "AgCF8pYJ+VfUe96RnTwjxr7YKIu0i3PSeZBsDY+xRhYtpxr7ZVgGq6ZCdZWxQ8iS8p9CJ0FH46t1hp5y8n0oFssAoGmkMj/J13BYUjbHlsGbvCl7HuSjmKXPZ5anY4jckLKc5D1tFYDayG+ARt2HAKPOv2lvq8RAGkQlVmj4EYnmmbhvaXNud/sffLfL8i5Spy5i1BSXdZDFCzS/ViFcAme+q1RcOnQdRBHQkk2XB7z3Ia6cXGb9j6ivYisEKV2BVN/vBb9hseyGpPvI8ph3l9+Zj8M9HUD7la1mrd9l4alL5Uejtj3Uz1nM0h+93aW87KreXG9fu6i/kX6DOrUwaz37jARdQmkXCQEjGGUn2IgcgWyxqNGPyUcLldhaOx7t4+kjtvgLPPGdtJ6KPcpfSZKp4pZ6FP9bCAIeA5jg+LhenlquAxCiV2yNkqiHPSmlUbaaUWnljSW27HrEyMzTy/KyIBICjaCA+RoGW/SBrc5buTz1dLAJgL08zBiYSAbon+YdMN75VS6d+aFKQS2DNmO71RDrD29U0w0CMovJV783PUKNm4ePJVxVW2SiP1PT6MBMMBcFgBvkmMkilqWHxDzo3XE73cMxUTdmT6272KJIS9Wh/lr7Y0CjHnuth+41DA161xDOgXBWhjc+E+RzVIDo4JnK4ZfHj5hSRHD2ri+7RebgZBO8FVHjOw3MHM4zoU+T8SYUOZ0zYICExrjdOJU7CAvAQhgvqtLv9OwGio7RP9Rwv4+/tCc="
+    }
+  }
+}
