@@ -56,6 +56,15 @@ func NewOpenSearchConnection() (*OpenSearchConnection, error) {
 }
 
 func (c OpenSearchConnection) PutVideo(ctx context.Context, video *internalTypes.Video) error {
+	// OpenSearch does not allow empty strings for embedding
+	if video.Transcript == "" {
+		video.Transcript = "No transcript available"
+	}
+
+	if video.Description == "" {
+		video.Description = "No description available"
+	}
+
 	body, err := json.Marshal(video)
 	if err != nil {
 		return fmt.Errorf("failed to marshal video: %w", err)
@@ -79,140 +88,6 @@ func (c OpenSearchConnection) PutVideo(ctx context.Context, video *internalTypes
 
 	return nil
 }
-
-/*
-func (c OpenSearchConnection) CreateIfNoIndices(ctx context.Context) error {
-	// First create the ingest pipeline
-	pipeline := strings.NewReader(`{
-		"processors": [{
-			"set": {
-				"field": "created_at",
-				"value": "{{_ingest.timestamp}}"
-			}
-		}]
-	}`)
-
-	putPipelineRequest := opensearchapi.IngestPutPipelineRequest{
-		PipelineID: "ingest_with_dates",
-		Body:       pipeline,
-	}
-
-	res, err := putPipelineRequest.Do(ctx, c.osc)
-	if err != nil {
-		return fmt.Errorf("failed to create pipeline: %w", err)
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return fmt.Errorf("error creating pipeline: %s", res.String())
-	}
-
-	// Check if videos index exists
-	existsReq := opensearchapi.IndicesExistsRequest{
-		Index: []string{"vb-se-videos"},
-	}
-
-	existsRes, err := existsReq.Do(ctx, c.osc)
-	if err != nil {
-		return fmt.Errorf("failed to check if index exists: %w", err)
-	}
-	defer existsRes.Body.Close()
-
-	if existsRes.StatusCode == http.StatusNotFound {
-		// Create videos index with mappings
-		mappings := strings.NewReader(`{
-			"mappings": {
-				"properties": {
-					"semantic_text": {
-						"type": "text"
-					},
-					"transcript": {
-						"type": "text",
-						"copy_to": ["semantic_text"]
-					},
-					"title": {
-						"type": "text",
-						"copy_to": ["semantic_text"]
-					},
-					"description": {
-						"type": "text",
-						"copy_to": ["semantic_text"]
-					},
-					"video_id": { "type": "keyword" },
-					"channel_id": { "type": "keyword" },
-					"thumbnail": { "type": "keyword" },
-					"url": { "type": "keyword" },
-					"upload_date": { "type": "date" },
-					"channel_name": { "type": "keyword" },
-					"created_at": { "type": "date" }
-				}
-			},
-			"settings": {
-				"default_pipeline": "ingest_with_dates"
-			}
-		}`)
-
-		createReq := opensearchapi.IndicesCreateRequest{
-			Index: "vb-se-videos",
-			Body:  mappings,
-		}
-
-		createRes, err := createReq.Do(ctx, c.osc)
-		if err != nil {
-			return fmt.Errorf("failed to create videos index: %w", err)
-		}
-		defer createRes.Body.Close()
-
-		if createRes.IsError() {
-			return fmt.Errorf("error creating videos index: %s", createRes.String())
-		}
-	}
-
-	// Check if channels index exists
-	existsReq = opensearchapi.IndicesExistsRequest{
-		Index: []string{"vb-se-channels"},
-	}
-
-	existsRes, err = existsReq.Do(ctx, c.osc)
-	if err != nil {
-		return fmt.Errorf("failed to check if channels index exists: %w", err)
-	}
-	defer existsRes.Body.Close()
-
-	if existsRes.StatusCode == http.StatusNotFound {
-		// Create channels index with mappings
-		mappings := strings.NewReader(`{
-			"mappings": {
-				"properties": {
-					"channel_id": { "type": "keyword" },
-					"channel_name": { "type": "keyword" },
-					"created_at": { "type": "date" }
-				}
-			},
-			"settings": {
-				"default_pipeline": "ingest_with_dates"
-			}
-		}`)
-
-		createReq := opensearchapi.IndicesCreateRequest{
-			Index: "vb-se-channels",
-			Body:  mappings,
-		}
-
-		createRes, err := createReq.Do(ctx, c.osc)
-		if err != nil {
-			return fmt.Errorf("failed to create channels index: %w", err)
-		}
-		defer createRes.Body.Close()
-
-		if createRes.IsError() {
-			return fmt.Errorf("error creating channels index: %s", createRes.String())
-		}
-	}
-
-	return nil
-}
-*/
 
 func (c OpenSearchConnection) GetNoTranscriptVideoIds(ctx context.Context) ([]string, error) {
 	// TODO: Implement OpenSearch version
@@ -282,7 +157,9 @@ func (c OpenSearchConnection) GetVideoIds(ctx context.Context, channelId string)
 	searchBody := strings.NewReader(fmt.Sprintf(`{
 		"query": {
 			"term": {
-				"channel_id": "%s"
+				"channel_id": {
+					"value": "%s"
+				}
 			}
 		},
 		"_source": ["video_id"]
@@ -429,7 +306,7 @@ func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]internal
 	}`, sortField, sortOrder, q, q, modelId, q, modelId, q, modelId))
 
 	// Create HTTP request
-	searchUrl := fmt.Sprintf("%s/vb-se-videos/_search", os.Getenv("OPENSEARCH_HOST"))
+	searchUrl := fmt.Sprintf("%s/vb-se-videos/_search?size=50", os.Getenv("OPENSEARCH_HOST"))
 	req, err := http.NewRequest("GET", searchUrl, searchBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
