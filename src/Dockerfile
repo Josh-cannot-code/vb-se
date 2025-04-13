@@ -24,7 +24,7 @@ RUN go mod download
 COPY go_server .
 
 # Build the application
-RUN CGO_ENABLED=1 GOOS=linux go build --tags fts5 -o /vb-se
+RUN CGO_ENABLED=0 GOOS=linux go build -o /vb-se
 
 # App port
 EXPOSE 3002
