@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -33,8 +32,10 @@ func TestGetVideoIds(t *testing.T) {
 	}
 	expected := []string{"REi089fakFI", "vu5ODMuAR5c"}
 
-	if !reflect.DeepEqual(vIds, expected) {
-		t.Fatalf(`got: %s, expected %s`, vIds, expected)
+	for i, vId := range vIds {
+		if *vId != expected[i] {
+			t.Fatalf(`got: %s, expected %s`, *vId, expected[i])
+		}
 	}
 }
 
