@@ -1,4 +1,4 @@
+@import "tailwindcss" source("../..");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@tailwind cards;
