@@ -216,7 +216,7 @@ func (c OpenSearchConnection) GetVideoIds(ctx context.Context, channelId string)
 	return videoIds, nil
 }
 
-func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]*internalTypes.VCardData, error) {
+func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]*internalTypes.Video, error) {
 	var sortField string
 	var sortOrder string
 
@@ -354,12 +354,17 @@ func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]*interna
 	}
 
 	// Convert to VCardData
-	vCards := make([]*internalTypes.VCardData, 0, len(searchResponse.Hits.Hits))
+	//vCards := make([]*internalTypes.VCardData, 0, len(searchResponse.Hits.Hits))
+	//for _, hit := range searchResponse.Hits.Hits {
+	//	vCards = append(vCards, &internalTypes.VCardData{
+	//		Video: hit.Source,
+	//	})
+	//}
+
+	videos := make([]*internalTypes.Video, 0, len(searchResponse.Hits.Hits))
 	for _, hit := range searchResponse.Hits.Hits {
-		vCards = append(vCards, &internalTypes.VCardData{
-			Video: hit.Source,
-		})
+		videos = append(videos, &hit.Source)
 	}
 
-	return vCards, nil
+	return videos, nil
 }

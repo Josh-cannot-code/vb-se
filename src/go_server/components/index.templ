@@ -1,0 +1,51 @@
+package components
+
+import "go_server/types"
+
+templ Index(videos []*types.Video) {
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="/static/output.css" rel="stylesheet">
+</head>
+<script>
+    function updateUrlWithState(state) {
+        const url = new URL(window.location.href);
+        Object.keys(state).forEach(key => {
+            url.searchParams.set(key, state[key]);
+        });
+        history.pushState({}, '', url);
+    }
+</script>
+<body>
+<div class="h-screen flex flex-col justify-between">
+    <h1 class="text-3xl text-center">
+        Vlogbrothers Search Engine
+    </h1>
+    <div class="text-center">
+        <form onsubmit="updateUrlWithState({search: document.getElementById('search-bar').value, sorting: document.getElementById('sorting').value})">
+            <input 
+                id="search-bar" 
+                type="text" 
+                name="search" 
+                placeholder="Search Vlogbrothers Youtube Channel"
+            >
+            <button type="submit">
+                Search
+            </button>
+        </form>
+    </div>
+    <div class="text-center mb-auto">
+        @VideoList(videos)
+    </div>
+    <footer>
+        <div class="text-center">
+            j.dallacqua1@gmail.com For Jade
+        </div>
+    </footer>
+</div>
+</body>
+</html>
+}

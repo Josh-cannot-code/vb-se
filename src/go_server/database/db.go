@@ -13,5 +13,5 @@ type Repository interface {
 	GetNoTranscriptVideoIds(ctx context.Context) ([]*string, error)
 	UpdateVideoTranscripts(ctx context.Context, transcriptMap map[string]string) error
 	UpdateVideoTextData(ctx context.Context) error
-	SearchVideos(query string, sorting string) ([]*types.VCardData, error)
+	SearchVideos(query string, sorting string) ([]*types.Video, error)
 }

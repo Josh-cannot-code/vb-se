@@ -2,66 +2,43 @@ package frontend
 
 import (
 	"go_server/database"
+	"go_server/types"
 	"net/http"
-	"strings"
-	"text/template"
 
-	slogctx "github.com/veqryn/slog-context"
+	"github.com/labstack/echo/v4"
 )
 
-func GetVideosHTML(db database.Repository, query string, sorting string) (*string, error) {
-	const templateFilePath = "./frontend/templates/video-card.html.tmpl"
-	htmlTemplate, err := template.ParseFiles(templateFilePath)
-	if err != nil {
-		return nil, err
-	}
-
+func GetVideos(db database.Repository, query string, sorting string) ([]*types.VCardData, error) {
 	videos, err := db.SearchVideos(query, sorting)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(videos) == 0 {
-		s := "<p>No results :(</p>"
-		return &s, nil
-	} else {
-		var vsb strings.Builder
-		for _, video := range videos {
-			descLength := min(300, len(video.Video.Description))
-			video.DescSnippet = video.Video.Description[:descLength]
-		}
-		err = htmlTemplate.Execute(&vsb, videos)
-		if err != nil {
-			return nil, err
-		}
-		vs := vsb.String()
-		return &vs, nil
+	// Add description snippets
+	for _, video := range videos {
+		descLength := min(300, len(video.Video.Description))
+		video.DescSnippet = video.Video.Description[:descLength]
 	}
 
+	return videos, nil
 }
 
-func SearchVideos(db database.Repository) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Get logger
-		ctx := slogctx.With(r.Context(), "function", "search videos")
-		log := slogctx.FromCtx(ctx)
-		// Get query
-		query := r.URL.Query().Get("search")
-		sorting := r.URL.Query().Get("sorting")
-		qlog := log.With("query", query, "sorting", sorting)
-		qlog.Info("searching videos")
+func GetSearchVideos(ctx echo.Context, db database.Repository) error {
+	// Get query parameters
+	query := ctx.QueryParam("search")
+	sorting := ctx.QueryParam("sorting")
 
-		w.Header().Add("Content-Type", "text/html")
+	// Get videos
+	videos, err := GetVideos(db, query, sorting)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get videos")
+	}
 
-		videoString, err := GetVideosHTML(db, query, sorting)
-		if err != nil {
-			qlog.Error("could not get videos", "error", err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		_, err = w.Write([]byte(*videoString))
-		if err != nil {
-			qlog.Error("could not write videos to response", "error", err.Error())
-		}
-	})
+	// Handle empty results
+	if len(videos) == 0 {
+		return ctx.HTML(http.StatusOK, "<p>No results :(</p>")
+	}
+
+	// Return template response
+	return ctx.Render(http.StatusOK, "video-card.html.tmpl", videos)
 }
