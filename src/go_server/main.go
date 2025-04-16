@@ -2,27 +2,22 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"go_server/components"
 	"go_server/database"
-	"go_server/frontend"
+
+	//"go_server/frontend"
+	"go_server/types"
 	"go_server/youtube"
 	"log/slog"
 	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
+	"github.com/a-h/templ"
 	"github.com/joho/godotenv"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	slogctx "github.com/veqryn/slog-context"
 )
-
-func LoggerMiddleware(next http.Handler, logger *slog.Logger) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Add slogger to the context
-		ctx := slogctx.NewCtx(r.Context(), logger)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
 
 func main() {
 
@@ -56,27 +51,45 @@ func main() {
 	}
 	log.Info("OpenSearch connection established")
 
-	// Make sure elastic indices have been created
-	// err = db.CreateIfNoIndices(ctx)
-	// if err != nil {
-	// 	log.Error("could not refresh indices", "message", err.Error())
-	// }
-
 	// Handler declarations
 	refreshHandler := youtube.RefreshVideos(db)
-	indexHandler := frontend.Index(db)
-	searchVideosHandler := frontend.SearchVideos(db)
+	//indexHandler := frontend.Index(db)
+	//searchVideosHandler := frontend.SearchVideos(db)
 
-	r := mux.NewRouter()
-	// Register handlers
-	r.Handle("/refresh", refreshHandler).Methods("GET")
-	r.Handle("/", indexHandler).Methods("GET")
-	r.Handle("/videos", searchVideosHandler).Methods("GET")
+	// Echo instance
+	e := echo.New()
 
-	port := os.Getenv("PORT")
-	fmt.Println("Listening on http://localhost:" + port)
-	err = http.ListenAndServe(":"+port, LoggerMiddleware(r, log))
-	if err != nil {
-		panic(err)
-	}
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Static("/static", "./static")
+
+	// Routes
+	e.GET("/refresh", func(c echo.Context) error {
+		refreshHandler(c.Response(), c.Request())
+		return nil
+	})
+	e.GET("/", func(c echo.Context) error {
+		query := c.QueryParam("search")
+
+		var videos []*types.Video
+		err := error(nil)
+		if query != "" {
+			videos, err = db.SearchVideos(query, "relevance")
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to search videos")
+			}
+		}
+
+		return render(c, http.StatusOK, components.Index(videos))
+	})
+
+	// Start server
+	e.Logger.Fatal(e.Start(":" + os.Getenv("PORT")))
+}
+
+func render(ctx echo.Context, statusCode int, t templ.Component) error {
+	ctx.Response().Writer.WriteHeader(statusCode)
+	ctx.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
+	return t.Render(ctx.Request().Context(), ctx.Response().Writer)
 }
