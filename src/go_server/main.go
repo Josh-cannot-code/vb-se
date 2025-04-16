@@ -28,10 +28,9 @@ func main() {
 	}
 
 	// Initialize logger
-	// TODO: add info about location and stuff here
 	defaultAttrs := []slog.Attr{
 		slog.String("service", "vb-be"),
-		slog.String("environment", os.Getenv("ENVIRONMENT")), // TODO: dev prod envs
+		slog.String("environment", os.Getenv("ENVIRONMENT")),
 	}
 
 	baseHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}).WithAttrs(defaultAttrs)
@@ -53,8 +52,6 @@ func main() {
 
 	// Handler declarations
 	refreshHandler := youtube.RefreshVideos(db)
-	//indexHandler := frontend.Index(db)
-	//searchVideosHandler := frontend.SearchVideos(db)
 
 	// Echo instance
 	e := echo.New()
