@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: refresh
-  namespace: vb-se-app
+  namespace: vb-se
   labels:
     app: vb-se
     component: refresh
