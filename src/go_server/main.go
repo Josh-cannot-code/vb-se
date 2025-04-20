@@ -4,7 +4,7 @@ import (
 	"go_server/components"
 	"go_server/database"
 
-	"go_server/types"
+	"go_server/models"
 	"log/slog"
 	"net/http"
 	"os"
@@ -48,7 +48,7 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		query := c.QueryParam("search")
 
-		var videos []*types.Video
+		var videos []*models.Video
 		err := error(nil)
 		if query != "" {
 			videos, err = db.SearchVideos(query, "relevance")

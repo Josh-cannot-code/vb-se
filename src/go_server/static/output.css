@@ -184,9 +184,6 @@
   }
 }
 @layer utilities {
-  .static {
-    position: static;
-  }
   .mx-auto {
     margin-inline: auto;
   }
@@ -228,9 +225,6 @@
   }
   .inline-block {
     display: inline-block;
-  }
-  .table {
-    display: table;
   }
   .h-72 {
     height: calc(var(--spacing) * 72);
