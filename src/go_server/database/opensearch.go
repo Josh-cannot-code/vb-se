@@ -1,19 +1,16 @@
 package database
 
 import (
-	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	internalTypes "go_server/types"
+	"go_server/models"
 	"io"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/opensearch-project/opensearch-go"
-	"github.com/opensearch-project/opensearch-go/opensearchapi"
-	slogctx "github.com/veqryn/slog-context"
 )
 
 type OpenSearchConnection struct {
@@ -55,168 +52,7 @@ func NewOpenSearchConnection() (*OpenSearchConnection, error) {
 	}, nil
 }
 
-func (c OpenSearchConnection) PutVideo(ctx context.Context, video *internalTypes.Video) error {
-	// OpenSearch does not allow empty strings for embedding
-	if video.Transcript == "" {
-		video.Transcript = "No transcript available"
-	}
-
-	if video.Description == "" {
-		video.Description = "No description available"
-	}
-
-	body, err := json.Marshal(video)
-	if err != nil {
-		return fmt.Errorf("failed to marshal video: %w", err)
-	}
-
-	req := opensearchapi.IndexRequest{
-		Index:      "vb-se-videos",
-		Body:       strings.NewReader(string(body)),
-		DocumentID: video.VideoID,
-	}
-
-	res, err := req.Do(ctx, c.osc)
-	if err != nil {
-		return fmt.Errorf("failed to index video: %w", err)
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return fmt.Errorf("error indexing video: %s", res.String())
-	}
-
-	return nil
-}
-
-func (c OpenSearchConnection) GetNoTranscriptVideoIds(ctx context.Context) ([]*string, error) {
-	// TODO: Implement OpenSearch version
-	return nil, nil
-}
-
-func (c OpenSearchConnection) UpdateVideoTranscripts(ctx context.Context, transcriptMap map[string]string) error {
-	// TODO: Implement OpenSearch version
-	return nil
-}
-
-func (c OpenSearchConnection) UpdateVideoTextData(ctx context.Context) error {
-	// TODO: Implement OpenSearch version
-	return nil
-}
-
-func (c OpenSearchConnection) GetChannelIds(ctx context.Context) ([]*string, error) {
-	// Create search request to get all channels
-	searchBody := strings.NewReader(`{
-		"query": {
-			"match_all": {}
-		},
-		"_source": ["channel_id"]
-	}`)
-
-	searchReq := opensearchapi.SearchRequest{
-		Index: []string{"vb-se-channels"},
-		Body:  searchBody,
-	}
-
-	res, err := searchReq.Do(ctx, c.osc)
-	if err != nil {
-		return nil, fmt.Errorf("failed to search channels: %w", err)
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return nil, fmt.Errorf("error searching channels: %s", res.String())
-	}
-
-	// Parse the response
-	var searchResponse struct {
-		Hits struct {
-			Hits []struct {
-				Source struct {
-					ChannelID string `json:"channel_id"`
-				} `json:"_source"`
-			} `json:"hits"`
-		} `json:"hits"`
-	}
-
-	if err := json.NewDecoder(res.Body).Decode(&searchResponse); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
-	}
-
-	// Extract channel IDs
-	channelIds := make([]*string, 0, len(searchResponse.Hits.Hits))
-	for _, hit := range searchResponse.Hits.Hits {
-		channelIds = append(channelIds, &hit.Source.ChannelID)
-	}
-
-	return channelIds, nil
-}
-
-func (c OpenSearchConnection) GetVideoIds(ctx context.Context, channelId string) ([]*string, error) {
-	// Create search query for videos by channel ID
-	searchBody := strings.NewReader(fmt.Sprintf(`{
-		"query": {
-			"term": {
-				"channel_id": {
-					"value": "%s"
-				}
-			}
-		},
-		"_source": ["video_id"]
-	}`, channelId))
-
-	searchSize := 10000
-
-	// Create search request
-	searchReq := opensearchapi.SearchRequest{
-		Index: []string{"vb-se-videos"},
-		Body:  searchBody,
-		Size:  &searchSize,
-	}
-
-	// Execute search
-	res, err := searchReq.Do(ctx, c.osc)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute search: %w", err)
-	}
-	defer res.Body.Close()
-
-	// Check for errors in response
-	if res.IsError() {
-		return nil, fmt.Errorf("search request failed: %s", res.String())
-	}
-
-	// Parse response
-	var searchResponse struct {
-		Hits struct {
-			Hits []struct {
-				Source struct {
-					VideoID string `json:"video_id"`
-				} `json:"_source"`
-			} `json:"hits"`
-		} `json:"hits"`
-	}
-
-	if err := json.NewDecoder(res.Body).Decode(&searchResponse); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
-	}
-
-	// Extract video IDs
-	videoIds := make([]*string, 0, len(searchResponse.Hits.Hits))
-	for _, hit := range searchResponse.Hits.Hits {
-		videoIds = append(videoIds, &hit.Source.VideoID)
-	}
-
-	// Get logger
-	ctx = slogctx.With(ctx, "function", "GetVideoIds")
-	log := slogctx.FromCtx(ctx)
-
-	log.Info("GetVideoIds", "channelId", channelId, "numVideosInDb", len(videoIds))
-
-	return videoIds, nil
-}
-
-func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]*internalTypes.Video, error) {
+func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]*models.Video, error) {
 	var sortField string
 	var sortOrder string
 
@@ -344,7 +180,7 @@ func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]*interna
 	var searchResponse struct {
 		Hits struct {
 			Hits []struct {
-				Source internalTypes.Video `json:"_source"`
+				Source models.Video `json:"_source"`
 			} `json:"hits"`
 		} `json:"hits"`
 	}
@@ -353,7 +189,7 @@ func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]*interna
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	videos := make([]*internalTypes.Video, 0, len(searchResponse.Hits.Hits))
+	videos := make([]*models.Video, 0, len(searchResponse.Hits.Hits))
 	for _, hit := range searchResponse.Hits.Hits {
 		videos = append(videos, &hit.Source)
 	}

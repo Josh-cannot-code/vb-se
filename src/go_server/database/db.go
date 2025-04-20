@@ -1,17 +1,9 @@
 package database
 
 import (
-	"context"
-	"go_server/types"
+	"go_server/models"
 )
 
-type Repository interface {
-	// TODO: transaction PutVideos
-	PutVideo(ctx context.Context, vid *types.Video) error
-	GetChannelIds(ctx context.Context) ([]*string, error)
-	GetVideoIds(ctx context.Context, channelId string) ([]*string, error)
-	GetNoTranscriptVideoIds(ctx context.Context) ([]*string, error)
-	UpdateVideoTranscripts(ctx context.Context, transcriptMap map[string]string) error
-	UpdateVideoTextData(ctx context.Context) error
-	SearchVideos(query string, sorting string) ([]*types.Video, error)
+type Datasource interface {
+	SearchVideos(query string, sorting string) ([]*models.Video, error)
 }
