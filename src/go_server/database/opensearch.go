@@ -331,7 +331,7 @@ func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]*interna
 	// Execute request
 	res, err := httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to search videos: %w", err)
+		return nil, fmt.Errorf("request to opensearch failed: %w", err)
 	}
 	defer res.Body.Close()
 
@@ -352,14 +352,6 @@ func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]*interna
 	if err := json.NewDecoder(res.Body).Decode(&searchResponse); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
-
-	// Convert to VCardData
-	//vCards := make([]*internalTypes.VCardData, 0, len(searchResponse.Hits.Hits))
-	//for _, hit := range searchResponse.Hits.Hits {
-	//	vCards = append(vCards, &internalTypes.VCardData{
-	//		Video: hit.Source,
-	//	})
-	//}
 
 	videos := make([]*internalTypes.Video, 0, len(searchResponse.Hits.Hits))
 	for _, hit := range searchResponse.Hits.Hits {
