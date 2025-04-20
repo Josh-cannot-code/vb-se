@@ -60,6 +60,7 @@ func main() {
 
 	// Routes
 	e.Static("/static", "./static")
+	e.File("/favicon.ico", "./static/favicon.ico")
 
 	e.GET("/refresh", func(c echo.Context) error {
 		refreshHandler(c.Response(), c.Request())
