@@ -1,0 +1,5 @@
+python-dotenv
+yt-dlp
+youtube-transcript-api
+requests
+google-api-python-client

@@ -5,7 +5,6 @@ import (
 	"go_server/database"
 
 	"go_server/types"
-	"go_server/youtube"
 	"log/slog"
 	"net/http"
 	"os"
@@ -25,25 +24,12 @@ func main() {
 		slog.Warn(".env file not loaded")
 	}
 
-	// Initialize logger
-	//defaultAttrs := []slog.Attr{
-	//	slog.String("service", "vb-be"),
-	//	slog.String("environment", os.Getenv("ENVIRONMENT")),
-	//}
-
 	// Echo instance
 	e := echo.New()
 
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-
-	//baseHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}).WithAttrs(defaultAttrs)
-	//customHandler := slogctx.NewHandler(baseHandler, nil)
-	//slog.SetDefault(slog.New(customHandler))
-
-	//ctx := slogctx.NewCtx(context.Background(), slog.Default())
-	//log := slogctx.FromCtx(ctx)
 
 	// OpenSearch
 	log.Info("opensearch host: ", os.Getenv("OPENSEARCH_HOST"))
@@ -55,17 +41,10 @@ func main() {
 	}
 	log.Info("OpenSearch connection established")
 
-	// Handler declarations
-	refreshHandler := youtube.RefreshVideos(db)
-
 	// Routes
 	e.Static("/static", "./static")
 	e.File("/favicon.ico", "./static/favicon.ico")
 
-	e.GET("/refresh", func(c echo.Context) error {
-		refreshHandler(c.Response(), c.Request())
-		return nil
-	})
 	e.GET("/", func(c echo.Context) error {
 		query := c.QueryParam("search")
 

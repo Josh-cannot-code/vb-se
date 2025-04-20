@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: refresh
+  namespace: vb-se-app
+  labels:
+    app: vb-se
+    component: refresh
+spec:
+  schedule: "0 */1 * * *"  # Run every hour
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: refresh
+            image: ghcr.io/josh-cannot-code/docker-vb-se-refresh:latest
+            env:
+            - name: YOUTUBE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: youtube-api-key
+                  key: api-key
+            - name: OPENSEARCH_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: vb-se-config
+                  key: opensearch_host
+            - name: OPENSEARCH_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: vb-se-config
+                  key: opensearch_port
+            - name: OPENSEARCH_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: vb-se-config
+                  key: opensearch_username
+            - name: OPENSEARCH_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: vb-se-config
+                  key: opensearch_password
+          restartPolicy: Never
