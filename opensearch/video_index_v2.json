@@ -1,0 +1,58 @@
+{
+  "settings": {
+    "index.knn": true,
+    "default_pipeline": "video-ingest-pipeline-v2"
+  },
+  "mappings": {
+    "properties": {
+      "video_id": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text",
+        "copy_to": "video_text"
+      },
+      "thumbnail": {
+        "type": "text"
+      },
+      "channel_id": {
+        "type": "keyword"
+      },
+      "channel_name": {
+        "type": "text"
+      },
+      "description": {
+        "type": "text",
+        "copy_to": "video_text"
+      },
+      "upload_date": {
+        "type": "date"
+      },
+      "url": {
+        "type": "text"
+      },
+      "transcript": {
+        "type": "text",
+        "copy_to": "video_text"
+      },    
+      "video_text": {
+        "type": "text"
+      },
+      "text_chunk_embedding": {
+        "type": "nested",
+        "properties": {
+          "knn": {
+            "type": "knn_vector",
+            "dimension": 768,
+            "method": {
+              "engine": "lucene",
+              "space_type": "l2",
+              "name": "hnsw",
+              "parameters": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}

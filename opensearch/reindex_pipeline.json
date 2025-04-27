@@ -1,0 +1,19 @@
+{
+    "processors": [
+        {
+            "remove": {
+                "field": "transcript_embedding"
+            }
+        },
+        {
+            "remove": {
+                "field": "video_embedding"
+            }
+        },
+        {
+            "remove": {
+                "field": "title_embedding"
+            }
+        }
+    ]
+}
