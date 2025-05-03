@@ -2,7 +2,7 @@ package main
 
 import (
 	"go_server/components"
-	"go_server/database"
+	database "go_server/database/opensearch"
 
 	"go_server/models"
 	"log/slog"
@@ -34,11 +34,12 @@ func main() {
 	// OpenSearch
 	log.Info("opensearch host: ", os.Getenv("OPENSEARCH_HOST"))
 
-	db, err := database.NewOpenSearchConnection()
+	db, err := database.GetOpenSearchAccess()
 	if err != nil {
-		log.Error("failed to connect to opensearch: ", err.Error())
+		log.Error("failed to create opensearch http client: ", err.Error())
 		return
 	}
+
 	log.Info("OpenSearch connection established")
 
 	// Routes

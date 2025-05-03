@@ -20,5 +20,4 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/labstack/gommon v0.4.2
-	github.com/opensearch-project/opensearch-go v1.1.0
 )
