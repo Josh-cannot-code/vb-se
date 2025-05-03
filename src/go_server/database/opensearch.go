@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/labstack/gommon/log"
 	"github.com/opensearch-project/opensearch-go"
 )
 
@@ -173,7 +174,27 @@ func (c OpenSearchConnection) SearchVideos(q string, sorting string) ([]*models.
 
 	if res.StatusCode >= 400 {
 		rawErr, _ := io.ReadAll(res.Body)
-		return nil, fmt.Errorf("error searching videos (status %d): %s", res.StatusCode, string(rawErr))
+		if strings.Contains(string(rawErr), "Please deploy the model first") {
+			log.Info("Model not deployed, attepmting deployment")
+			redeployUrl := fmt.Sprintf("%s/_plugins/_ml/models/%s/_deploy", os.Getenv("OPENSEARCH_HOST"), modelId)
+			req, err := http.NewRequest("POST", redeployUrl, nil)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create request: %w", err)
+			}
+			req.Header.Set("Content-Type", "application/json")
+			req.SetBasicAuth(os.Getenv("OPENSEARCH_USERNAME"), os.Getenv("OPENSEARCH_PASSWORD"))
+
+			_, err = httpClient.Do(req)
+			if err != nil {
+				return nil, fmt.Errorf("failed to make request to deploy model: %w", err)
+			}
+
+			if res.StatusCode >= 400 {
+				rawErr, _ = io.ReadAll(res.Body)
+				return nil, fmt.Errorf("error deploying model (status %d): %s", res.StatusCode, string(rawErr))
+			}
+		}
+		return nil, fmt.Errorf("model was not deployed, re-deploy started")
 	}
 
 	// Parse the response
