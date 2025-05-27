@@ -10,15 +10,15 @@ spec:
   selector:
     matchLabels:
       app: marqo
-  volumes:
-  - name: marqo-pvc
-    persistentVolumeClaim:
-      claimName: marqo-pvc
   template:
     metadata:
       labels:
         app: marqo
     spec:
+      volumes:
+      - name: marqo-pvc
+        persistentVolumeClaim:
+          claimName: marqo-pvc
       containers:
       - name: marqo
         image: marqoai/marqo:latest
