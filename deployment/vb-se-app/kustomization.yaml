@@ -8,3 +8,5 @@ resources:
   - ./tunnel-credentials-sealed.json
   - ./cloudflare-config.yaml
   - ./refresh-job.yaml
+  - ./marqo-pvc.yaml
+  - ./marqo-deployment.yaml

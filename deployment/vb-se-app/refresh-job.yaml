@@ -14,6 +14,7 @@ spec:
     spec:
       template:
         spec:
+          restartPolicy: Never
           containers:
           - name: refresh
             image: ghcr.io/josh-cannot-code/docker-vb-se-refresh:latest
@@ -23,24 +24,8 @@ spec:
                 secretKeyRef:
                   name: youtube-api-key
                   key: api-key
-            - name: OPENSEARCH_HOST
+            - name: MARQO_HOST
               valueFrom:
                 configMapKeyRef:
                   name: vb-se-config
-                  key: opensearch_host
-            - name: OPENSEARCH_PORT
-              valueFrom:
-                configMapKeyRef:
-                  name: vb-se-config
-                  key: opensearch_port
-            - name: OPENSEARCH_USERNAME
-              valueFrom:
-                configMapKeyRef:
-                  name: vb-se-config
-                  key: opensearch_username
-            - name: OPENSEARCH_PASSWORD
-              valueFrom:
-                configMapKeyRef:
-                  name: vb-se-config
-                  key: opensearch_password
-          restartPolicy: Never
+                  key: marqo_host

@@ -5,7 +5,7 @@ import (
 )
 
 type Video struct {
-	ID          string    `json:"id"`
+	ID          string    `json:"_id"`
 	VideoID     string    `json:"video_id"`
 	Title       string    `json:"title"`
 	Thumbnail   string    `json:"thumbnail"`

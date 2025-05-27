@@ -27,31 +27,11 @@ spec:
               key: api-key
         - name: ENVIRONMENT
           value: "prod"
-        - name: OPENSEARCH_HOST
+        - name: MARQO_HOST
           valueFrom:
             configMapKeyRef:
               name: vb-se-config
-              key: opensearch_host
-        - name: OPENSEARCH_PORT
-          valueFrom:
-            configMapKeyRef:
-              name: vb-se-config
-              key: opensearch_port
-        - name: OPENSEARCH_USERNAME
-          valueFrom:
-            configMapKeyRef:
-              name: vb-se-config
-              key: opensearch_username
-        - name: OPENSEARCH_PASSWORD
-          valueFrom:
-            configMapKeyRef:
-              name: vb-se-config
-              key: opensearch_password
-        - name: OPENSEARCH_MODEL_ID
-          valueFrom:
-            configMapKeyRef:
-              name: vb-se-config
-              key: opensearch_model_id
+              key: marqo_host
         ports:
         - containerPort: 3002
           name: vb-se-port
