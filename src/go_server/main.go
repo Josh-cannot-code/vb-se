@@ -1,7 +1,7 @@
 package main
 
 import (
-	database "go_server/database/opensearch"
+	database "go_server/database/marqo"
 	"go_server/rest"
 
 	"log/slog"
@@ -27,16 +27,16 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	// OpenSearch
-	log.Info("opensearch host: ", os.Getenv("OPENSEARCH_HOST"))
-
-	db, err := database.GetOpenSearchAccess()
+	// Marqo
+	marqoHost := os.Getenv("MARQO_HOST")
+	log.Info("marqo host: ", marqoHost)
+	db, err := database.GetMarqoAccess(marqoHost)
 	if err != nil {
-		log.Error("failed to create opensearch http client: ", err.Error())
+		log.Error("failed to create marqo http client: ", err.Error())
 		return
 	}
 
-	log.Info("OpenSearch connection established")
+	log.Info("Marqo connection established")
 
 	// Routes
 	e.GET("/", rest.HandleSearch(db))

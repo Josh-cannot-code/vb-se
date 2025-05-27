@@ -3,3 +3,5 @@ yt-dlp
 youtube-transcript-api
 requests
 google-api-python-client
+json
+marqo

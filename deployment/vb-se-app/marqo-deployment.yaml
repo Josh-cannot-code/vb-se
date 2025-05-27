@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marqo
+  namespace: vb-se
+  labels:
+    app: marqo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: marqo
+  volumes:
+  - name: marqo-pvc
+    persistentVolumeClaim:
+      claimName: marqo-pvc
+  template:
+    metadata:
+      labels:
+        app: marqo
+    spec:
+      containers:
+      - name: marqo
+        image: marqoai/marqo:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8882
+          name: marqo-port
+        volumeMounts:
+        - name: marqo-pvc
+          mountPath: /opt/vespa/var

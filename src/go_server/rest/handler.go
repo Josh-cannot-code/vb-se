@@ -18,7 +18,7 @@ func HandleSearch(db database.Datasource) echo.HandlerFunc {
 		var videos []*models.Video
 		if query != "" {
 			var err error
-			videos, err = db.SearchVideos(query, "relevance")
+			videos, err = db.SearchVideos(query)
 			if err != nil {
 				c.Logger().Error("failed to search videos: ", err.Error())
 				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to search videos")
