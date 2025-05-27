@@ -7,7 +7,7 @@ metadata:
     app: vb-se
     component: refresh
 spec:
-  schedule: "17 30 * * *"  # Run every day at midnight
+  schedule: "0 0 * * *"  # Run every day at midnight
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1
   jobTemplate:
