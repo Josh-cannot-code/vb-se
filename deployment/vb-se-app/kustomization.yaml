@@ -10,3 +10,4 @@ resources:
   - ./refresh-job.yaml
   - ./marqo-pvc.yaml
   - ./marqo-deployment.yaml
+  - ./marqo-service.yaml

@@ -28,4 +28,17 @@ spec:
           name: marqo-port
         volumeMounts:
         - name: marqo-pvc
-          mountPath: /opt/vespa/var
+          mountPath: /app/data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: marqo
+  namespace: vb-se
+spec:
+  selector:
+    app: marqo
+  ports:
+    - protocol: TCP
+      port: 8882
+      targetPort: marqo-port
