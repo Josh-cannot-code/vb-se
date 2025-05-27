@@ -6,3 +6,4 @@ metadata:
   namespace: vb-se
 data:
   marqo_host: "http://marqo.vb-se.svc.cluster.local:8882"
+  channels: "[\"UCGaVdbSav8xWuFWTadK6loA\"]"

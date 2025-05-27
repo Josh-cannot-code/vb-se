@@ -29,4 +29,8 @@ spec:
                 configMapKeyRef:
                   name: vb-se-config
                   key: marqo_host
-                  # TODO: channels
+            - name: CHANNELS
+              valueFrom:
+                configMapKeyRef:
+                  name: vb-se-config
+                  key: channels
