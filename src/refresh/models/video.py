@@ -72,12 +72,12 @@ class Video:
         return video
 
     def __getVideoTranscript(self, videoId: str) -> Optional[str]:
-        transcript, unretrievable_transcripts = YouTubeTranscriptApi.get_transcripts([videoId])
+        yttapi = YouTubeTranscriptApi()
+        transcript = yttapi.fetch(videoId)
 
-        if videoId in unretrievable_transcripts:
-            return None
-        else:
-            s = ""
-            for t in transcript[videoId]:
-                s += " " + t["text"]
-            return s
+
+        s = ""
+        for t in transcript:
+            s += " " + t.text
+
+        return s
