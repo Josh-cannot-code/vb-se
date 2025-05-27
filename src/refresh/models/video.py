@@ -28,7 +28,6 @@ class Video:
         
         transcript = self.__getVideoTranscript(videoId)
         if transcript is None:
-            print(f"Failed to get transcript for {videoId}")
             transcript = "NO_TRANSCRIPT"
         
         originalTimeFormat = "%Y%m%d"
@@ -73,8 +72,11 @@ class Video:
 
     def __getVideoTranscript(self, videoId: str) -> Optional[str]:
         yttapi = YouTubeTranscriptApi()
-        transcript = yttapi.fetch(videoId)
-
+        try:
+            transcript = yttapi.fetch(videoId)
+        except Exception as e:
+            print(f"Failed to get transcript for video {videoId}: {str(e)}")
+            return None
 
         s = ""
         for t in transcript:
