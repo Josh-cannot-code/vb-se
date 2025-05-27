@@ -14,5 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the Python script
 COPY main.py .
+COPY database/ database/
+COPY models/ models/
 
 CMD ["python", "main.py"]
