@@ -84,7 +84,11 @@ def main():
         for videoId in videosToProcess:
             print(f"Processing video: {videoId}")
 
-            video = Video(videoId)
+            try:
+                video = Video(videoId)
+            except ValueError as e:
+                print(f"Failed to process video {videoId}: {str(e)}")
+                continue
             
             if db.putVideo(video):
                 print(f"Successfully indexed video {videoId}")
