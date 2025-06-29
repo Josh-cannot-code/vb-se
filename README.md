@@ -1,14 +1,13 @@
 # Vlogbrothers Search Engine
 
-A modern search engine for the Vlogbrothers YouTube channel, featuring advanced search capabilities and a responsive user interface.
+A search engine for the Vlogbrothers YouTube channel, featuring advanced search capabilities and a responsive user interface.
 
 ## Technology Stack
 
 ### Search Engine
-- **OpenSearch**: Utilizing hybrid search capabilities for improved search relevance
+- **Marqo**: Utilizing hybrid search capabilities for improved search relevance
   - Text-based search for video titles and descriptions
   - Semantic search on video transcripts for better understanding of user queries
-  - Adjustable weights for scoring and ranking
 
 ### Infrastructure
 
@@ -20,9 +19,9 @@ A modern search engine for the Vlogbrothers YouTube channel, featuring advanced 
   - GitOps-friendly encrypted configuration
 
 #### Search Infrastructure
-- **OpenSearch**: Self-hosted on bare metal Kubernetes cluster
-  - High-availability deployment with multiple master nodes
-  - Replicated data for fault tolerance using longhorn
+- **Marqo**: Self-hosted on bare metal Kubernetes cluster
+  - High-performance vector search engine
+  - Efficient storage and indexing of video metadata and transcripts
 
 #### Ingress
 - **Cloudflare Tunnels**: Zero-trust secure ingress
