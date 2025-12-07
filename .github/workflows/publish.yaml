@@ -36,5 +36,5 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build the vb-se-refresh-docker-image
         run: |
-          docker build ./src/refresh --tag ghcr.io/josh-cannot-code/docker-vb-se-refresh:latest
+          docker build ./src/refresh_v2 --tag ghcr.io/josh-cannot-code/docker-vb-se-refresh:latest
           docker push ghcr.io/josh-cannot-code/docker-vb-se-refresh:latest

@@ -11,14 +11,14 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func HandleSearch(db database.Datasource) echo.HandlerFunc {
+func HandleSearch(db database.Datasource, index string) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		query := c.QueryParam("search")
 
 		var videos []*models.Video
 		if query != "" {
 			var err error
-			videos, err = db.SearchVideos(query)
+			videos, err = db.SearchVideos(query, index)
 			if err != nil {
 				c.Logger().Error("failed to search videos: ", err.Error())
 				return echo.NewHTTPError(http.StatusInternalServerError, "Failed to search videos")

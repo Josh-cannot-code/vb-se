@@ -37,6 +37,5 @@ A search engine for the Vlogbrothers YouTube channel, featuring advanced search 
 ### Development
 - **Go**: Backend service with structured logging and dependency injection
 - **Python**: Video data collection and processing
-  - youtube-dl for metadata extraction
   - youtube-transcript-api for automated transcript fetching
-- **YouTube API**: Fetching all video IDs for a channel
+- **YouTube API**: Fetching all video IDs and metadata for a channel

@@ -5,8 +5,6 @@ import (
 	"go_server/models"
 )
 
-const vbSeIndex = "vb-se-videos"
-
 type MarqoAccess struct {
 	client *MarqoClient
 }
@@ -24,6 +22,6 @@ func GetMarqoAccess(host string) (*MarqoAccess, error) {
 	return &MarqoAccess{client: client}, nil
 }
 
-func (c *MarqoAccess) SearchVideos(query string) ([]*models.Video, error) {
-	return c.client.Search(query, vbSeIndex)
+func (c *MarqoAccess) SearchVideos(query, index string) ([]*models.Video, error) {
+	return c.client.Search(query, index)
 }
