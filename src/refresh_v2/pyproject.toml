@@ -1,0 +1,14 @@
+[project]
+name = "refresh-v2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dotenv>=0.9.9",
+    "google-api-python-client>=2.187.0",
+    "google-api-python-client-stubs>=1.31.0",
+    "marqo>=3.18.0",
+    "pydantic>=2.12.5",
+    "youtube-transcript-api>=1.2.3",
+]

@@ -5,5 +5,5 @@ import (
 )
 
 type Datasource interface {
-	SearchVideos(query string) ([]*models.Video, error)
+	SearchVideos(query, index string) ([]*models.Video, error)
 }

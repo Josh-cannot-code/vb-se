@@ -39,7 +39,11 @@ func main() {
 	log.Info("Marqo connection established")
 
 	// Routes
-	e.GET("/", rest.HandleSearch(db))
+	index, ok := os.LookupEnv("MARQO_INDEX_NAME")
+	if !ok {
+		panic("MARQO_INDEX_NAME environment variable not set")
+	}
+	e.GET("/", rest.HandleSearch(db, index))
 	e.Static("/static", "./static")
 	e.File("/favicon.ico", "./static/favicon.ico")
 
