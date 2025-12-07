@@ -1,4 +1,5 @@
 from __future__ import annotations
+from time import sleep
 from googleapiclient.discovery import build  # pyright: ignore[reportUnknownVariableType]
 from youtube_transcript_api import YouTubeTranscriptApi
 from pydantic import BaseModel
@@ -168,14 +169,26 @@ def put_video(db_client: marqo.Client, index_name: str, video_meta: VideoMetadat
     print(f"Indexed video {video_meta.video_id}: {resp}")
 
 
-# TODO: handle cases where transcript is not available
 def get_video_transcript(video_id: str) -> str | None:
     yttapi = YouTubeTranscriptApi()
-    try:
-        transcript = yttapi.fetch(video_id)
-    except Exception as e:
-        print(f"Error fetching transcript for video {video_id}: {e}")
-        return None
+    
+    max_retries = 6 # retry every 10 min for up to an hour
+    retry_count = 0
+    transcript = None
+    while retry_count < max_retries:
+        try:
+            transcript = yttapi.fetch(video_id)
+        except Exception as e:
+            if "blocking requests from your IP." in str(e):
+                print(f"Transcript fetching blocked for video {video_id}: {e}")
+                print(f"Retrying in 10 mins...")
+                sleep(10 * 60)
+            else:
+                print(f"Error fetching transcript for video {video_id}: {e}")
+                return None
+
+    if transcript is None:
+        raise Exception(f"Failed to fetch transcript for video {video_id} after {max_retries} retries.")
 
     transcript_text = ""
     for snippet in transcript:
