@@ -6,4 +6,6 @@ COPY . /app
 WORKDIR /app
 RUN uv sync --locked
 
+ENV PYTHONUNBUFFERED=1
+
 CMD ["uv", "run", "main.py"]
