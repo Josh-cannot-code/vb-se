@@ -172,7 +172,7 @@ def put_video(db_client: marqo.Client, index_name: str, video_meta: VideoMetadat
 def get_video_transcript(video_id: str) -> str | None:
     yttapi = YouTubeTranscriptApi()
     
-    max_retries = 6 # retry every 10 min for up to an hour
+    max_retries = 1 # after 20 mins of wait
     retry_count = 0
     transcript = None
     while retry_count < max_retries:
@@ -182,13 +182,14 @@ def get_video_transcript(video_id: str) -> str | None:
             if "blocking requests from your IP." in str(e):
                 print(f"Transcript fetching blocked for video {video_id}: {e}")
                 print(f"Retrying in 10 mins...")
-                sleep(10 * 60)
+                sleep(20 * 60)
             else:
                 print(f"Error fetching transcript for video {video_id}: {e}")
                 return None
 
     if transcript is None:
-        raise Exception(f"Failed to fetch transcript for video {video_id} after {max_retries} retries.")
+        print(f"Failed to fetch transcript for video {video_id} after {max_retries} retries.")
+        return None
 
     transcript_text = ""
     for snippet in transcript:
