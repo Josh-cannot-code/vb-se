@@ -145,7 +145,6 @@ index_settings = {
 
 # Throws error
 def put_video(db_client: marqo.Client, index_name: str, video_meta: VideoMetadata, transcript: str | None) -> None:
-
     try:
         print(f"Checking if index {index_name} exists...")
         _ = db_client.get_index(index_name)
@@ -158,7 +157,11 @@ def put_video(db_client: marqo.Client, index_name: str, video_meta: VideoMetadat
             resp = db_client.create_index(index_name, settings_dict=index_settings)
             print(f"Created index {index_name}: {resp}")
 
-    video_meta.transcript = transcript
+    if transcript is not None:
+        video_meta.transcript = transcript
+    else:
+        video_meta.transcript = "NO TRANSCRIPT AVAILABLE"
+
     raw_video_meta = video_meta.model_dump()
 
     resp = db_client.index(index_name).add_documents([raw_video_meta])   # pyright: ignore[reportUnknownMemberType]
@@ -182,7 +185,7 @@ def get_video_transcript(video_id: str) -> str | None:
             if "blocking requests from your IP." in str(e):
                 print(f"Transcript fetching blocked for video {video_id}: {e}")
                 print(f"Retrying in 10 mins...")
-                sleep(20 * 60)
+                sleep(10 * 60)
             else:
                 print(f"Error fetching transcript for video {video_id}: {e}")
                 return None
