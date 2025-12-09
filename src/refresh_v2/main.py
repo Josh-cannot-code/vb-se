@@ -186,6 +186,7 @@ def get_video_transcript(video_id: str) -> str | None:
             else:
                 print(f"Error fetching transcript for video {video_id}: {e}")
                 return None
+        retry_count += 1
 
     if transcript is None:
         print(f"Failed to fetch transcript for video {video_id} after {max_retries} retries.")
