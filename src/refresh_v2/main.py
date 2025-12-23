@@ -183,6 +183,7 @@ def get_video_transcript(video_id: str) -> str | None:
     except Exception as e:
         if "blocking requests from your IP." in str(e):
             print(f"Transcript fetching blocked for video {video_id}: {e}")
+            raise e
         else:
             print(f"Error fetching transcript for video {video_id}: {e}")
         return None
