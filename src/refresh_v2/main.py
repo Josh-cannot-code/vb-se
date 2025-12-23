@@ -178,6 +178,7 @@ def get_video_transcript(video_id: str) -> str | None:
     transcript = None
     try:
         transcript = yttapi.fetch(video_id)
+        print(f"fetched transcript for video {video_id} sleeping for 10 mins to avoid blockin")
         sleep(10*60)  # Sleep for 10 mins to avoid blocking
     except Exception as e:
         if "blocking requests from your IP." in str(e):
