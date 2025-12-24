@@ -52,6 +52,7 @@ def get_playlist_video_ids(playlist_id: str, api_key: str) -> list[str]:
 
     return video_ids
 
+
 class VideoMetadata(BaseModel):
     video_id: str
     title: str
@@ -62,6 +63,7 @@ class VideoMetadata(BaseModel):
     url: str
     channel_name: str
     transcript: str | None = None
+
 
 def get_videos_metadata(video_ids: list[str], api_key: str) -> list[VideoMetadata]:
     youtube = build('youtube', 'v3', developerKey=api_key)
@@ -98,7 +100,9 @@ def get_videos_metadata(video_ids: list[str], api_key: str) -> list[VideoMetadat
 
     return videos
 
-def get_existing_video_ids(db_client: marqo.Client, index_name: str) -> list[str]:
+
+# Returns tuple of (document_id, video_id)
+def get_existing_video_ids(db_client: marqo.Client, index_name: str) -> list[tuple[str, str]]:
     try:
         search_results = db_client.index(index_name).search(  # pyright: ignore[reportUnknownMemberType]
             q="",
@@ -111,10 +115,11 @@ def get_existing_video_ids(db_client: marqo.Client, index_name: str) -> list[str
         else:
             raise e
 
-    ids: list[str] = []
+    ids: list[tuple[str, str]] = []
     for hit in search_results.get('hits', []):  # pyright: ignore[reportAny]
         video_id = str(hit.get('video_id'))  # pyright: ignore[reportAny]
-        ids.append(video_id)
+        doc_id = str(hit.get('_id'))  # pyright: ignore[reportAny]
+        ids.append((doc_id, video_id))
 
     return ids
 
@@ -172,6 +177,22 @@ def put_video(db_client: marqo.Client, index_name: str, video_meta: VideoMetadat
     print(f"Indexed video {video_meta.video_id}: {resp}")
 
 
+def delete_duplicate_videos(db_client: marqo.Client, index_name: str, docs: list[tuple[str, str]]) -> None:
+    seen_video_ids: set[str] = set()
+    docs_to_delete: list[str] = []
+    for doc_id, video_id in docs:
+        if video_id in seen_video_ids:
+            print(f"Adding (vid_id: {video_id}, doc_id: {doc_id}) to duplicate delete list")
+            docs_to_delete.append(doc_id)
+        else:
+            seen_video_ids.add(video_id)
+
+    if len(docs_to_delete) != 0:
+        resp = db_client.index(index_name).delete_documents(docs_to_delete)
+        print(f"Deleted duplicate videos: {resp}")
+
+
+
 def get_video_transcript(video_id: str) -> str | None:
     yttapi = YouTubeTranscriptApi()
     
@@ -194,6 +215,7 @@ def get_video_transcript(video_id: str) -> str | None:
 
     return transcript_text
 
+
 def refresh_videos_for_channel(channel_id: str, api_key: str, db_client: marqo.Client, index_name: str) -> None:
     playlist_id = get_channel_playlist_id(channel_id, api_key)
     if playlist_id is None:
@@ -203,8 +225,12 @@ def refresh_videos_for_channel(channel_id: str, api_key: str, db_client: marqo.C
     video_ids = get_playlist_video_ids(playlist_id, api_key)
     print(f"Found {len(video_ids)} videos in channel {channel_id}.")
 
-    existing_ids = get_existing_video_ids(db_client, index_name)
-    print(f"Found {len(existing_ids)} existing videos in index {index_name}.")
+    existing_docs = get_existing_video_ids(db_client, index_name)
+    print(f"Found {len(existing_docs)} existing videos in index {index_name}.")
+
+    delete_duplicate_videos(db_client, index_name, existing_docs)
+
+    existing_ids = {vid for _, vid in existing_docs}
 
     new_video_ids = [vid for vid in video_ids if vid not in existing_ids]
     print(f"Found {len(new_video_ids)} new videos to index.")
@@ -244,6 +270,7 @@ def main():
     for channel_id in channels:
         print(f"Refreshing videos for channel {channel_id}...")
         refresh_videos_for_channel(channel_id, api_key, db_client, index_name)
+
 
 if __name__ == "__main__":
     main()
